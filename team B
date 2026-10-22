@@ -1,0 +1,64 @@
+//PHASE 0:
+Phase 0, Team B. Read agents.md fully.
+1. Write contracts/openapi.yaml (OpenAPI 3.1) covering: auth (/v1/auth/login), institutions, programs/intake, batches (POST upload, GET status, GET report, GET issues, POST resubmit), students (GET/PUT by apaar_id, masked), duplicates (list, resolve), anomalies (list), consent (grant/withdraw), credentials (issue, revoke, status list), verify (POST), audit (list, verify-chain), reports (generate), events (SSE /v1/events). Use the BatchReport schema from agents.md §5.3.
+2. contracts/schemas/student_record.json (JSON Schema) from agents.md §5.1.
+3. backend/ skeleton: FastAPI app, settings via pydantic-settings, health endpoint, Alembic init.
+4. docker-compose.yml: postgres:16, redis:7, backend, frontend. Add .env.example.
+Do this contract work FIRST and push it early: Team C mocks against it.
+Brainstorm → plan → work → review. Terse output.
+
+//PHASE 1:
+Phase 1, Team B.
+1. SQLAlchemy models + Alembic migration: institutions, users, api_keys, programs, program_intake, batches, student_records, issues, audit_log (with prev_hash, hash).
+2. Auth: POST /v1/auth/login (argon2 passwords, JWT access + refresh); API key auth for institution machine clients (hashed keys, prefix shown once).
+3. RBAC dependency require_roles(...) enforced on every router; roles from agents.md §7.
+4. POST /v1/batches (multipart CSV/XLSX, max 20 MB, idempotency-key header), run apaar_engine.validate_batch synchronously for now, persist the batch and issues, return the BatchReport.
+5. Seed script: AICTE admin, 5 institutions with admins, programs and intake from data/synthetic/intake.csv.
+6. Tests with httpx: role denial, an upload happy path, a duplicate idempotency key.
+Install the engine as an editable dependency (pip install -e ../engine). Terse output.
+
+//PHASE 2:
+Phase 2, Team B.
+1. Move validation to an async worker (RQ + Redis; fallback BackgroundTasks). Batch states: UPLOADED → VALIDATING → VALIDATED | REJECTED → COMMITTED.
+2. GET /v1/events (SSE): emit batch.progress, batch.completed, anomaly.detected, duplicate.flagged, scoped by role and institution.
+3. ApaarRegistry interface + MockApaarRegistry (seeded from data/synthetic/registry.csv), passed into validate_batch.
+4. Commit step: only rows without ERROR issues upsert into student_records (key: apaar_id + program_code + academic_year). Keep version history (valid_from, valid_to). Institutions can PUT corrections with a reason; every change goes to the audit log.
+5. Aggregation endpoints for dashboards: /v1/stats/intake (by state/program/year), /v1/stats/quotas, /v1/stats/quality.
+6. GET /v1/batches/{id}/report.xlsx using Team A's exporter.
+Terse output.
+
+//PHASE 3:
+Phase 3, Team B.
+1. Pass a central repository snapshot (only the columns needed for blocking) and the metric history into validate_batch. Persist metric states to metric_history.
+2. duplicate_flags table + endpoints: GET /v1/duplicates (filter scope/status), POST /v1/duplicates/{id}/resolve {decision: SAME_PERSON|DIFFERENT|INSTITUTION_ERROR, note}. Resolution is audited and notifies both institutions (SSE + webhook).
+3. anomalies table + GET /v1/anomalies; AICTE can acknowledge or escalate them.
+4. Performance: index apaar_id, (institution, program, year), name_norm soundex; a 50k-row batch must validate in < 60 s locally.
+Terse output.
+
+//PHASE 4:
+Phase 4, Team B.
+1. Consent ledger: POST /v1/consent {purpose: REPOSITORY|VERIFICATION_SHARE, action: GRANT|WITHDRAW}; current consent = the latest event. Block credential issue/verify without VERIFICATION_SHARE consent. Show consent history to the student.
+2. Audit chain: every write + PII read + verification appends (actor, role, action, entity, ts, prev_hash, hash). GET /v1/audit/verify-chain recomputes and returns the first broken link if any. Add a script that tampers one row for the demo.
+3. Keys: Ed25519 per institution + AICTE root key; /.well-known/did.json (did:web) and a trusted-issuer list signed by AICTE.
+4. POST /v1/credentials/issue → SD-JWT VC (claims from Team A's builder). POST /v1/credentials/{id}/revoke → status list bit. GET /v1/status-list.
+5. POST /v1/verify {presentation}: check signature, issuer in the trust list, not revoked, disclosures hash-match; return only the disclosed claims + issuer + issued_at. VERIFIER role or a public endpoint with rate limit; always audited.
+6. QR payload: a compact URL https://<host>/verify#<presentation> for certificates (APAAR + institution_student_id always disclosed on certificates per PS requirement 10).
+7. Stretch: a Merkle root of committed records per batch stored in batches.merkle_root; per-record inclusion proof endpoint.
+Terse output.
+
+/PHASE 5:
+Phase 5, Team B.
+1. Security pass: OWASP top 10 checklist, input size limits, CSV formula injection guard on exports (prefix = + - @), CORS lock-down, rate limits, secure headers, encrypted email/mobile at rest, secrets only from env.
+2. Webhooks to institution systems (batch.completed, duplicate.flagged) with HMAC signatures + retries.
+3. One-command demo: `make demo` seeds data, creates users per role, and loads the 4 demo batches (clean, defects, over-intake, cross-duplicate).
+4. README backend section + Postman/Bruno collection generated from OpenAPI.
+Terse output.
+
+//PHASE 6(DO NOT IMPLEMENT):
+6. Open items to confirm (do not assume)
+The official APAAR ID format and checksum (we validate 12 digits only; structure is a warning).
+Real APAAR/DigiLocker API access for production; we use a mock registry behind an interface.
+Current AICTE supernumerary percentages per scheme (kept in config).
+IEEE document 10163764 vs Rustemi et al. 2023 (DOI 10.1109/access.2023.3289598): confirm they are the same paper.
+Springer s10639-024-12493-6: get the full text manually; the research agent couldn't access it.
+SynEdu-HEDL column count (85 on Zenodo vs ~60 on GitHub): check the actual zip.
