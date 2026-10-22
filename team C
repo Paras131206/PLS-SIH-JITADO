@@ -1,0 +1,58 @@
+//PHASE 0:
+Phase 0, Team C. Read agents.md §2, §3, §7, §10.
+1. frontend/: Vite + React 18 + TS + Tailwind + shadcn/ui + React Router + TanStack Query.
+2. Generate a typed API client from contracts/openapi.yaml (openapi-typescript) once Team B pushes it; until then stub the types.
+3. MSW mock handlers for every endpoint, returning realistic fake data (masked APAAR like 1234****9012).
+4. Layout with role-based navigation: Institution, AICTE, Verifier, Student. Design tokens: government-portal palette, accessible contrast, dark mode.
+5. docs/literature_review.md skeleton with the source table from agents.md §9.
+Brainstorm → plan → work → review. Terse output.
+
+//PHASE 1:
+Phase 1, Team C.
+1. Login page → JWT stored in memory (refresh via httpOnly cookie when the backend supports it), role-based redirect.
+2. Institution "Upload batch" page: download the CSV template (headers from student_record.json), drag-drop upload with progress, then show the BatchReport summary cards (total/valid/warning/error, quality score).
+3. Issues table: virtualised, filter by rule_id/severity/field, search by masked APAAR, export the issue list as CSV, rule descriptions as tooltips (from rule_catalog.yaml).
+4. Switch from MSW to the real backend behind an env flag VITE_USE_MOCKS.
+5. Vitest for the table filters; a Playwright smoke test for login → upload → issues.
+Terse output.
+
+//PHASE 2:
+Phase 2, Team C.
+1. Institution dashboard: per-program intake vs enrolment bars (approved / regular / supernumerary / excess in red), quota breakdown (NRI/OCI/FN/PIO), DQ score trend across batches, batch history list with status chips updated live via SSE.
+2. AICTE console v1: KPI tiles (institutions reporting, students, average DQ score, excess-enrolment count), state-wise choropleth or table drilldown → institution → program, an "excess enrolment" leaderboard, live batch feed.
+3. Fix-and-resubmit flow: download the issue XLSX, upload a corrected file linked to the original batch, show a diff of the issue counts.
+4. Mask PII by default; "reveal" needs the AICTE_ANALYST role and shows that the action is audited.
+Terse output.
+
+//PHASE 3:
+Phase 3, Team C.
+1. Duplicate review queue (AICTE): list with score, scope and institutions; side-by-side compare showing which fields matched and how strongly; resolve buttons with a note; keyboard shortcuts.
+2. Anomaly feed: live cards (metric, value vs baseline, reason, institution), acknowledge/escalate, sparkline of the metric history.
+3. Institution view of duplicates that involve its students (masked info about the other institution).
+Terse output.
+
+//PHASE 4:
+Phase 4, Team C.
+1. Student page: own record (masked), consent toggles with history, "Share" builder: pick fields → call issue/present → show the QR + copy link + expiry.
+2. Verifier portal: camera QR scan (html5-qrcode) or paste → big green VERIFIED / red FAILED with reason (bad signature, revoked, untrusted issuer), disclosed fields only, issuer name, check timestamp.
+3. Certificate template (reports/templates/certificate.html, printable A4): institution name, student name, program, APAAR ID, student ID, QR code, verification URL.
+4. Audit page (AICTE): searchable log + "Verify chain integrity" button showing OK or the broken link.
+Terse output.
+
+//PHASE 5:
+Phase 5, Team C.
+1. Report builder: filters (year, state, program, category, quota) → preview → export PDF/XLSX (policy, accreditation and monitoring templates).
+2. Finish docs/literature_review.md: a comparison table (approach, privacy, selective disclosure, scale, cost, gaps) of the sources in agents.md §9 vs APAAR-SDMS. Mark sources read only as abstracts.
+3. demo/demo_script.md (5 minutes): (1) institution uploads a defective batch → issues; (2) fix + resubmit → committed; (3) AICTE console shows over-intake + anomaly live; (4) cross-institution duplicate resolved; (5) certificate QR verified by an employer with selective disclosure; (6) audit tamper detected.
+4. demo/pitch_outline.md: problem → solution → architecture → innovation (anomaly, fuzzy dedup, SD-JWT) → evaluation numbers → impact → roadmap (real APAAR/DigiLocker integration, PPRL, ZK predicates).
+5. Accessibility + mobile pass; Playwright full-demo test.
+Terse output.
+
+//PHASE 6(DO NOT IMPLEMENT):
+6. Open items to confirm (do not assume)
+The official APAAR ID format and checksum (we validate 12 digits only; structure is a warning).
+Real APAAR/DigiLocker API access for production; we use a mock registry behind an interface.
+Current AICTE supernumerary percentages per scheme (kept in config).
+IEEE document 10163764 vs Rustemi et al. 2023 (DOI 10.1109/access.2023.3289598): confirm they are the same paper.
+Springer s10639-024-12493-6: get the full text manually; the research agent couldn't access it.
+SynEdu-HEDL column count (85 on Zenodo vs ~60 on GitHub): check the actual zip.
