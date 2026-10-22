@@ -1,0 +1,8 @@
+//PHASE 0:
+Phase 0, Team A. Read agents.md §5–6 and §9.
+1. Create engine/ as a Python package `apaar_engine` (pyproject.toml, ruff, pytest).
+2. Write contracts/rule_catalog.yaml with V001–V020 (id, severity, description, fields, params) exactly as in agents.md §6.
+3. Write engine/apaar_engine/models.py: Pydantic v2 models StudentRecord, ProgramIntake, Issue, DuplicateCluster, Anomaly, BatchReport matching agents.md §5.
+4. Write data/synthetic/generate.py v0: 5 institutions, 3 programs each with approved_intake, 1,000 valid students with 12-digit APAAR IDs. Output students.csv, intake.csv, registry.csv (mock APAAR registry) and defects.json (empty for now).
+5. pytest: the models round-trip the generated CSV.
+Do not touch backend/ or frontend/. Brainstorm → plan → work → review. Terse output.
