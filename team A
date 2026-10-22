@@ -6,3 +6,55 @@ Phase 0, Team A. Read agents.md §5–6 and §9.
 4. Write data/synthetic/generate.py v0: 5 institutions, 3 programs each with approved_intake, 1,000 valid students with 12-digit APAAR IDs. Output students.csv, intake.csv, registry.csv (mock APAAR registry) and defects.json (empty for now).
 5. pytest: the models round-trip the generated CSV.
 Do not touch backend/ or frontend/. Brainstorm → plan → work → review. Terse output.
+
+//PHASE 1:
+Phase 1, Team A.
+1. engine/apaar_engine/parser.py: read CSV and XLSX (openpyxl), detect encoding, normalise headers (case, spaces, common aliases like "APAAR No" → apaar_id), trim cells, keep the original row number. Bad rows become issues; parsing never crashes.
+2. engine/apaar_engine/rules/: a registry that loads rule_catalog.yaml and maps rule_id → function. Implement V001, V002, V005, V006, V007, V008 vectorised in pandas/pandera.
+3. engine/apaar_engine/validate.py: validate_batch(file_or_df, intake_df, registry=None, history=None) -> BatchReport. Rules that need registry/history are skipped when those are None.
+4. Extend the generator to inject these defects at known rows and record them in defects.json.
+5. pytest: every injected defect is found with the right rule_id and row; clean rows have no issues.
+Terse output.
+
+//PHASE 2:
+Phase 2, Team A.
+1. Implement V012 (regular enrolment > approved_intake), V013 (supernumerary > allowed per scheme, from program_intake.supernumerary_allowed config), V014 (OCI/FN with nationality IN; NRI flag mismatch with quota), V015, V016 (age vs course_level: configurable ranges), V017 (admission_date within the academic-year window), V018 (consent missing; under 18 without guardian_consent), V019 (program not approved).
+2. V003/V004: accept a `registry` object with lookup(apaar_id) -> {name, dob} | None. V004 uses rapidfuzz token_set_ratio on normalised names plus exact DOB.
+3. intake_summary per program: approved, enrolled_regular, supernumerary by scheme, excess.
+4. quality_score = weighted (completeness, validity, uniqueness, consistency) in 0–100; document the weights in the code.
+5. reports/dq_report.py: BatchReport → XLSX (Summary, Issues, Intake, Column Metrics sheets) and JSON.
+6. Generator: add over-intake, OCI-with-IN and missing-consent defects. Update the tests.
+Terse output.
+
+//PHASE 3:
+Phase 3, Team A.
+1. engine/apaar_engine/dedup/normalize.py: Indian name normalisation (uppercase, strip honorifics SHRI/SMT/KUMARI/DR/MR/MS, remove punctuation, collapse spaces, expand/handle initials, sorted tokens) + indic-soundex codes.
+2. dedup/intra.py (V009): block on (soundex of first token, dob year) and (dob, gender); score with Jaro-Winkler + token_set_ratio + exact dob; cluster pairs ≥0.92 = flag, 0.75–0.92 = review.
+3. dedup/cross.py (V010, V011): input = new batch + central repository snapshot (DataFrame). V010 = same APAAR ACTIVE at another institution in the same year. V011 = Splink (duckdb, link_only) fuzzy match with a different APAAR. Return DuplicateClusters with scope=CROSS_INSTITUTION and the evidence fields.
+4. anomaly/metrics.py: Deequ-style per-batch metric state (null rate per column, duplicate rate, nri/oci/fn share, supernumerary share, intake fill ratio, rows); mergeable JSON states.
+5. anomaly/detect.py (V020): z-score / relative change vs the institution's history (min 3 batches, else peer-group baseline by state + program); plus IsolationForest across institutions; every anomaly gets a human-readable reason.
+6. Generator: transliteration variants (Bhairoo/Bheru, Krishna/Krushna), initials, swapped name order, cross-institution double enrolment, a sudden NRI-share spike. Report precision/recall/F1 per rule in tests.
+Terse output.
+
+//PHASE 4:
+Phase 4, Team A.
+1. Credential claim builder: from_student_record(record) → a dict of claims for the SD-JWT (apaar_id, institution_student_id, full_name, program, course_level, academic_year, enrolment_status, quota flags), each marked selectively disclosable except issuer metadata.
+2. Report exports for policy use: aggregate tables (by state, program, category, quota, year) as DataFrames + XLSX, with small-cell suppression (counts < 5 shown as "<5") for privacy.
+3. Tests for both.
+Terse output.
+
+//PHASE 5:
+Phase 5, Team A.
+1. Evaluation script: on 3 seeds of synthetic data print a precision/recall/F1 table per rule and for dedup; save it to docs/evaluation.md (Team C links it in the deck).
+2. Load test: 50k-row batch and 200k-row central repository; profile and fix hotspots.
+3. Constraint suggestion (Deequ idea): profile a clean batch and suggest new rules (not-null, enum, regex) for AICTE admin approval; output YAML.
+Terse output.
+
+//PHASE 6(DO NOT IMPLEMENET):
+6. Open items to confirm (do not assume)
+The official APAAR ID format and checksum (we validate 12 digits only; structure is a warning).
+Real APAAR/DigiLocker API access for production; we use a mock registry behind an interface.
+Current AICTE supernumerary percentages per scheme (kept in config).
+IEEE document 10163764 vs Rustemi et al. 2023 (DOI 10.1109/access.2023.3289598): confirm they are the same paper.
+Springer s10639-024-12493-6: get the full text manually; the research agent couldn't access it.
+SynEdu-HEDL column count (85 on Zenodo vs ~60 on GitHub): check the actual zip.
