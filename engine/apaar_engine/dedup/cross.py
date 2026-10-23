@@ -236,8 +236,8 @@ def _detect_v011_splink_fuzzy(
     if batch_clean.empty or central_clean.empty:
         return issues, clusters
 
-    batch_clean_map = {row["unique_id"]: row for _, row in batch_clean.iterrows()}
-    central_clean_map = {row["unique_id"]: row for _, row in central_clean.iterrows()}
+    batch_clean_map = {row["unique_id"]: row.to_dict() for _, row in batch_clean.iterrows()}
+    central_clean_map = {row["unique_id"]: row.to_dict() for _, row in central_clean.iterrows()}
 
     settings = SettingsCreator(
         link_type="link_only",
@@ -275,26 +275,21 @@ def _detect_v011_splink_fuzzy(
         b_rec = batch_clean_map.get(uid_l, {})
         c_rec = central_clean_map.get(uid_r, {})
 
-        apaar_l = str(row.get("apaar_id_l", b_rec.get("apaar_id", ""))).strip()
-        apaar_r = str(row.get("apaar_id_r", c_rec.get("apaar_id", ""))).strip()
-        inst_l = str(
-            row.get("institution_aicte_id_l", b_rec.get("institution_aicte_id", ""))
-        ).strip()
-        inst_r = str(
-            row.get("institution_aicte_id_r", c_rec.get("institution_aicte_id", ""))
-        ).strip()
+        apaar_l = str(b_rec.get("apaar_id", "")).strip()
+        apaar_r = str(c_rec.get("apaar_id", "")).strip()
+        inst_l = str(b_rec.get("institution_aicte_id", "")).strip()
+        inst_r = str(c_rec.get("institution_aicte_id", "")).strip()
+        name_l = str(b_rec.get("name", "")).strip()
+        name_r = str(c_rec.get("name", "")).strip()
+        dob_l = str(b_rec.get("dob", "")).strip()
+        dob_r = str(c_rec.get("dob", "")).strip()
         orig_row = int(uid_l.replace("batch_", "")) if "batch_" in uid_l else 0
 
         # Must be different APAAR and different institution
         if apaar_l == apaar_r or inst_l == inst_r:
             continue
 
-        pair_score = score_pair(
-            str(row.get("name_l", "")),
-            str(row.get("name_r", "")),
-            str(row.get("dob_l", "")),
-            str(row.get("dob_r", "")),
-        )
+        pair_score = score_pair(name_l, name_r, dob_l, dob_r)
         if pair_score < review_threshold:
             continue
 
@@ -314,9 +309,9 @@ def _detect_v011_splink_fuzzy(
                 "central_apaar": mask_apaar(apaar_r),
                 "batch_institution": inst_l,
                 "central_institution": inst_r,
-                "name_batch": row.get("name_l", ""),
-                "name_central": row.get("name_r", ""),
-                "dob": row.get("dob_l", ""),
+                "name_batch": name_l,
+                "name_central": name_r,
+                "dob": dob_l,
                 "score": score_val,
             },
         )
