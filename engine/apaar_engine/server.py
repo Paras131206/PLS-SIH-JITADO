@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import socket
 import threading
 import urllib.parse
 from http import HTTPStatus
@@ -176,24 +177,43 @@ class ApaarServerHandler(BaseHTTPRequestHandler):
         self.send_error(HTTPStatus.NOT_FOUND, "Not found")
 
 
+class DualStackServer(ThreadingHTTPServer):
+    address_family = socket.AF_INET6
+
+    def server_bind(self) -> None:
+        try:
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        except Exception:
+            pass
+        super().server_bind()
+
+
 def start_server_on_port(port: int) -> None:
     try:
-        server = ThreadingHTTPServer(("0.0.0.0", port), ApaarServerHandler)
-        logger.info("Serving APAAR Engine Web App on http://localhost:%d", port)
+        server = DualStackServer(("::", port), ApaarServerHandler)
+        logger.info("Serving APAAR Engine Web App (dual-stack) on http://localhost:%d", port)
         server.serve_forever()
     except Exception as exc:
-        logger.warning("Could not bind port %d: %s", port, exc)
+        logger.info("Could not bind dual-stack on port %d (%s), falling back to IPv4...", port, exc)
+        try:
+            server_v4 = ThreadingHTTPServer(("0.0.0.0", port), ApaarServerHandler)
+            logger.info("Serving APAAR Engine Web App (IPv4) on http://localhost:%d", port)
+            server_v4.serve_forever()
+        except Exception as exc4:
+            logger.warning("Could not bind port %d: %s", port, exc4)
 
 
 def main() -> None:
     load_reference_data()
-    # Launch servers on both Port 8000 and Port 5173
-    t1 = threading.Thread(target=start_server_on_port, args=(8000,), daemon=False)
-    t2 = threading.Thread(target=start_server_on_port, args=(5173,), daemon=False)
-    t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
+    # Launch servers on standard ports: 8000, 5173, and 3000
+    ports = [8000, 5173, 3000]
+    threads = []
+    for port in ports:
+        t = threading.Thread(target=start_server_on_port, args=(port,), daemon=True)
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()
 
 
 if __name__ == "__main__":
