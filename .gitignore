@@ -31,3 +31,11 @@ ENV/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Local env & databases
+.env
+*.db
+*.sqlite3
+postgres_data/
+redis_data/
+
