@@ -22,7 +22,9 @@ from typing import Any, BinaryIO, Dict, List, Optional, Union
 import pandas as pd
 
 from apaar_engine.models import (
+    Anomaly,
     BatchReport,
+    DuplicateCluster,
     IntakeSummary,
     Issue,
     Severity,
@@ -219,18 +221,22 @@ def validate_batch(
     intake_df: Optional[pd.DataFrame] = None,
     registry: Optional[Any] = None,
     history: Optional[Any] = None,
+    central_df: Optional[pd.DataFrame] = None,
+    peer_history: Optional[Any] = None,
     batch_id: Optional[str] = None,
     institution_aicte_id: Optional[str] = None,
 ) -> BatchReport:
     """Validate an uploaded batch against canonical schema and rule catalog V001–V020.
 
     - Stays pure (no direct DB/HTTP dependencies).
-    - Rules requiring registry/history are skipped when those are None.
+    - Rules requiring registry/history/central_df are skipped when those are None.
     """
     if batch_id is None:
         batch_id = str(uuid.uuid4())
 
     all_issues: List[Issue] = []
+    duplicate_clusters: List[DuplicateCluster] = []
+    anomalies: List[Anomaly] = []
 
     # 1. Parse file if needed
     if isinstance(file_or_df, pd.DataFrame):
@@ -255,7 +261,7 @@ def validate_batch(
     # 3. Load rule catalog
     catalog = load_rule_catalog()
 
-    # 4. Run Phase 1 & 2 rules
+    # 4. Run Rules
     # Schema & header rules
     all_issues.extend(run_rule("V001", df, catalog=catalog))
     all_issues.extend(run_rule("V002", df, catalog=catalog))
@@ -282,9 +288,43 @@ def validate_batch(
         all_issues.extend(run_rule("V003", df, catalog=catalog, registry=registry))
         all_issues.extend(run_rule("V004", df, catalog=catalog, registry=registry))
 
-    # Metric history rules (require history)
-    if history is not None:
-        all_issues.extend(run_rule("V020", df, catalog=catalog, history=history))
+    # Intra-batch dedup rule (V009)
+    all_issues.extend(run_rule("V009", df, catalog=catalog, cluster_collector=duplicate_clusters))
+
+    # Cross-institution dedup rules (V010, V011)
+    if central_df is not None:
+        all_issues.extend(
+            run_rule(
+                "V010",
+                df,
+                catalog=catalog,
+                central_df=central_df,
+                cluster_collector=duplicate_clusters,
+            )
+        )
+        all_issues.extend(
+            run_rule(
+                "V011",
+                df,
+                catalog=catalog,
+                central_df=central_df,
+                cluster_collector=duplicate_clusters,
+            )
+        )
+
+    # Metric history anomaly rules (V020)
+    if history is not None or peer_history is not None:
+        all_issues.extend(
+            run_rule(
+                "V020",
+                df,
+                catalog=catalog,
+                history=history,
+                peer_history=peer_history,
+                intake_df=intake_df,
+                anomaly_collector=anomalies,
+            )
+        )
 
     # 5. Row-level classification
     rows_total = len(df)
@@ -321,6 +361,6 @@ def validate_batch(
         metrics=metrics,
         issues=all_issues,
         intake_summary=intake_summary,
-        duplicate_clusters=[],
-        anomalies=[],
+        duplicate_clusters=duplicate_clusters,
+        anomalies=anomalies,
     )

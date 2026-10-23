@@ -18,6 +18,9 @@ dependencies = [
     "pyyaml>=6.0.0",
     "openpyxl>=3.1.0",
     "rapidfuzz>=3.5.0",
+    "scikit-learn>=1.9.1",
+    "duckdb>=2.0.0",
+    "splink>=5.0.0",
 ]
 
 [project.optional-dependencies]
@@ -41,3 +44,9 @@ ignore = []
 minversion = "7.0"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]

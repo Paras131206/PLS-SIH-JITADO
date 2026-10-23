@@ -171,6 +171,7 @@ def generate_clean_dataset(
         allocations[i] += 1
 
     existing_apaar_ids: set[str] = set()
+    existing_identities: set[tuple[str, str]] = set()
     students: list[dict[str, Any]] = []
     registry_records: list[dict[str, Any]] = []
     student_counter = 0
@@ -215,6 +216,8 @@ def generate_clean_dataset(
                 end_date = date(2008, 8, 1)
                 days_range = (end_date - start_date).days
                 dob = start_date + timedelta(days=rng.randint(0, days_range))
+                while (full_name, dob.isoformat()) in existing_identities:
+                    dob = start_date + timedelta(days=rng.randint(0, days_range))
 
                 adm_start = date(2026, 7, 1)
                 adm_days = rng.randint(0, 55)
@@ -223,6 +226,8 @@ def generate_clean_dataset(
                 age_years = (admission_date - dob).days // 365
                 is_minor = age_years < 18
                 guardian_consent = True if is_minor else None
+
+            existing_identities.add((full_name, dob.isoformat()))
 
             category = rng.choices(CATEGORIES, weights=CATEGORY_WEIGHTS)[0]
             pwd = rng.random() < 0.03
@@ -741,6 +746,115 @@ def inject_defects(
         }
     )
 
+    # 31. Rows 320 & 325 (idx 318 & 323): V009 - Krishna / Krushna transliteration variant
+    students_copy[318]["full_name"] = "Krishna Joshi"
+    students_copy[323]["full_name"] = "Krushna Joshi"
+    students_copy[323]["dob"] = students_copy[318]["dob"]
+    students_copy[323]["gender"] = students_copy[318]["gender"]
+    defects.append(
+        {
+            "row": 320,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (Krishna/Krushna transliteration variant)",
+        }
+    )
+    defects.append(
+        {
+            "row": 325,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (Krishna/Krushna transliteration variant)",
+        }
+    )
+
+    # 32. Rows 340 & 345 (idx 338 & 343): V009 - Bhairoo / Bheru transliteration variant
+    students_copy[338]["full_name"] = "Bhairoo Sharma"
+    students_copy[343]["full_name"] = "Bheru Sharma"
+    students_copy[343]["dob"] = students_copy[338]["dob"]
+    students_copy[343]["gender"] = students_copy[338]["gender"]
+    defects.append(
+        {
+            "row": 340,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (Bhairoo/Bheru transliteration variant)",
+        }
+    )
+    defects.append(
+        {
+            "row": 345,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (Bhairoo/Bheru transliteration variant)",
+        }
+    )
+
+    # 33. Rows 360 & 365 (idx 358 & 363): V009 - Initials variant (Anil Kumar vs A. K.)
+    students_copy[358]["full_name"] = "Anil Kumar Sharma"
+    students_copy[363]["full_name"] = "A. K. Sharma"
+    students_copy[363]["dob"] = students_copy[358]["dob"]
+    students_copy[363]["gender"] = students_copy[358]["gender"]
+    defects.append(
+        {
+            "row": 360,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (initials variant Anil Kumar vs A. K.)",
+        }
+    )
+    defects.append(
+        {
+            "row": 365,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (initials variant Anil Kumar vs A. K.)",
+        }
+    )
+
+    # 34. Rows 380 & 385 (idx 378 & 383): V009 - Swapped name order (Aarav Verma vs Verma Aarav)
+    students_copy[378]["full_name"] = "Aarav Verma"
+    students_copy[383]["full_name"] = "Verma Aarav"
+    students_copy[383]["dob"] = students_copy[378]["dob"]
+    students_copy[383]["gender"] = students_copy[378]["gender"]
+    defects.append(
+        {
+            "row": 380,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (swapped name order Aarav Verma vs Verma Aarav)",
+        }
+    )
+    defects.append(
+        {
+            "row": 385,
+            "rule_id": "V009",
+            "field": "full_name",
+            "description": "Probable intra-batch duplicate (swapped name order Aarav Verma vs Verma Aarav)",
+        }
+    )
+
+    # 35. Row 412 (idx 410): V010 - Same APAAR ACTIVE at another institution
+    defects.append(
+        {
+            "row": 412,
+            "rule_id": "V010",
+            "field": "apaar_id",
+            "description": "Same APAAR ACTIVE at another institution in same academic year",
+        }
+    )
+
+    # 36. Row 422 (idx 420): V011 - Cross-institution fuzzy duplicate under different APAAR
+    students_copy[420]["full_name"] = "Krishna Joshi"
+    defects.append(
+        {
+            "row": 422,
+            "rule_id": "V011",
+            "field": "full_name",
+            "description": "Cross-institution probable same person under different APAAR (Krishna vs Krushna)",
+        }
+    )
+
     return students_copy, defects
 
 
@@ -824,9 +938,90 @@ def generate_dataset(output_dir: Path = OUTPUT_DIR) -> None:
     with open(defects_json_path, mode="w", encoding="utf-8") as f:
         json.dump(defects, f, indent=2)
 
+    # 5. Write central_snapshot.csv for cross-institution testing (V010, V011)
+    central_records = [
+        dict(s) for s in clean_students if s["institution_aicte_id"] != "1-10001"
+    ]
+
+    # Seed cross-institution double enrolment for student 410 (Row 412) -> V010
+    v010_student = defective_students[410]
+    central_records.append(
+        {
+            **v010_student,
+            "institution_aicte_id": "1-10002",
+            "enrolment_status": "ACTIVE",
+            "academic_year": "2026-27",
+        }
+    )
+
+    # Seed cross-institution fuzzy duplicate under different APAAR for student 420 (Row 422) -> V011
+    v011_student = defective_students[420]
+    central_records.append(
+        {
+            **v011_student,
+            "apaar_id": "999911110000",
+            "full_name": "Krushna Joshi",
+            "institution_aicte_id": "1-10004",
+            "enrolment_status": "ACTIVE",
+            "academic_year": "2026-27",
+        }
+    )
+
+    central_csv_path = output_dir / "central_snapshot.csv"
+    with open(central_csv_path, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=student_fieldnames)
+        writer.writeheader()
+        writer.writerows(central_records)
+
+    # 6. Write history_states.json for metric anomaly testing (V020)
+    history_states = [
+        {
+            "institution_aicte_id": "1-10001",
+            "academic_year": "2023-24",
+            "batch_id": "hist-batch-001",
+            "rows_total": 200,
+            "null_rate_per_column": {"full_name": 0.0, "dob": 0.0, "gender": 0.0},
+            "duplicate_rate": 0.0,
+            "nri_share": 0.020,
+            "oci_share": 0.0,
+            "fn_share": 0.0,
+            "supernumerary_share": 0.030,
+            "intake_fill_ratio": 0.95,
+        },
+        {
+            "institution_aicte_id": "1-10001",
+            "academic_year": "2024-25",
+            "batch_id": "hist-batch-002",
+            "rows_total": 205,
+            "null_rate_per_column": {"full_name": 0.0, "dob": 0.0, "gender": 0.0},
+            "duplicate_rate": 0.0,
+            "nri_share": 0.025,
+            "oci_share": 0.0,
+            "fn_share": 0.0,
+            "supernumerary_share": 0.035,
+            "intake_fill_ratio": 0.96,
+        },
+        {
+            "institution_aicte_id": "1-10001",
+            "academic_year": "2025-26",
+            "batch_id": "hist-batch-003",
+            "rows_total": 210,
+            "null_rate_per_column": {"full_name": 0.0, "dob": 0.0, "gender": 0.0},
+            "duplicate_rate": 0.0,
+            "nri_share": 0.022,
+            "oci_share": 0.0,
+            "fn_share": 0.0,
+            "supernumerary_share": 0.028,
+            "intake_fill_ratio": 0.94,
+        },
+    ]
+    history_json_path = output_dir / "history_states.json"
+    with open(history_json_path, mode="w", encoding="utf-8") as f:
+        json.dump(history_states, f, indent=2)
+
     print(
         f"Generated 1000 clean students, 1000 students with {len(defects)} defects, "
-        f"and {len(intake_records)} intake records into {output_dir}"
+        f"{len(central_records)} central snapshot records, and {len(intake_records)} intake records into {output_dir}"
     )
 
 
