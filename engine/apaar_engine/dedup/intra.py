@@ -16,7 +16,11 @@ from typing import Dict, List, Set, Tuple
 from uuid import uuid4
 
 import pandas as pd
+
+# pyrefly: ignore[missing-import]
 from rapidfuzz import fuzz
+
+# pyrefly: ignore[missing-import]
 from rapidfuzz.distance import JaroWinkler
 
 from apaar_engine.dedup.normalize import (

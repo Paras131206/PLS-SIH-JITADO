@@ -187,7 +187,10 @@ def _detect_v011_splink_fuzzy(
         return issues, clusters
 
     try:
+        # pyrefly: ignore[missing-import]
         import splink.comparison_library as cl
+
+        # pyrefly: ignore[missing-import]
         from splink import DuckDBAPI, Linker, SettingsCreator, block_on
     except ImportError as e:
         logger.warning("Splink / DuckDB not available for V011 cross-dedup: %s", e)
