@@ -1,0 +1,53 @@
+[
+  {
+    "institution_aicte_id": "1-10001",
+    "academic_year": "2023-24",
+    "batch_id": "hist-batch-001",
+    "rows_total": 200,
+    "null_rate_per_column": {
+      "full_name": 0.0,
+      "dob": 0.0,
+      "gender": 0.0
+    },
+    "duplicate_rate": 0.0,
+    "nri_share": 0.02,
+    "oci_share": 0.0,
+    "fn_share": 0.0,
+    "supernumerary_share": 0.03,
+    "intake_fill_ratio": 0.95
+  },
+  {
+    "institution_aicte_id": "1-10001",
+    "academic_year": "2024-25",
+    "batch_id": "hist-batch-002",
+    "rows_total": 205,
+    "null_rate_per_column": {
+      "full_name": 0.0,
+      "dob": 0.0,
+      "gender": 0.0
+    },
+    "duplicate_rate": 0.0,
+    "nri_share": 0.025,
+    "oci_share": 0.0,
+    "fn_share": 0.0,
+    "supernumerary_share": 0.035,
+    "intake_fill_ratio": 0.96
+  },
+  {
+    "institution_aicte_id": "1-10001",
+    "academic_year": "2025-26",
+    "batch_id": "hist-batch-003",
+    "rows_total": 210,
+    "null_rate_per_column": {
+      "full_name": 0.0,
+      "dob": 0.0,
+      "gender": 0.0
+    },
+    "duplicate_rate": 0.0,
+    "nri_share": 0.022,
+    "oci_share": 0.0,
+    "fn_share": 0.0,
+    "supernumerary_share": 0.028,
+    "intake_fill_ratio": 0.94
+  }
+]

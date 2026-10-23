@@ -4,6 +4,7 @@ Rules package and registry exports.
 """
 
 import apaar_engine.rules.consistency_rules  # noqa: F401
+import apaar_engine.rules.dedup_rules  # noqa: F401
 import apaar_engine.rules.intake_rules  # noqa: F401
 import apaar_engine.rules.registry_rules  # noqa: F401
 

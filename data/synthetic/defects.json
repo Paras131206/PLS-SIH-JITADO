@@ -196,5 +196,65 @@
     "rule_id": "V012",
     "field": "approved_intake",
     "description": "Regular enrolment exceeds approved intake (65) for UG-MECH"
+  },
+  {
+    "row": 320,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (Krishna/Krushna transliteration variant)"
+  },
+  {
+    "row": 325,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (Krishna/Krushna transliteration variant)"
+  },
+  {
+    "row": 340,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (Bhairoo/Bheru transliteration variant)"
+  },
+  {
+    "row": 345,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (Bhairoo/Bheru transliteration variant)"
+  },
+  {
+    "row": 360,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (initials variant Anil Kumar vs A. K.)"
+  },
+  {
+    "row": 365,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (initials variant Anil Kumar vs A. K.)"
+  },
+  {
+    "row": 380,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (swapped name order Aarav Verma vs Verma Aarav)"
+  },
+  {
+    "row": 385,
+    "rule_id": "V009",
+    "field": "full_name",
+    "description": "Probable intra-batch duplicate (swapped name order Aarav Verma vs Verma Aarav)"
+  },
+  {
+    "row": 412,
+    "rule_id": "V010",
+    "field": "apaar_id",
+    "description": "Same APAAR ACTIVE at another institution in same academic year"
+  },
+  {
+    "row": 422,
+    "rule_id": "V011",
+    "field": "full_name",
+    "description": "Cross-institution probable same person under different APAAR (Krishna vs Krushna)"
   }
 ]

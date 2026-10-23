@@ -279,6 +279,9 @@ class DuplicateCluster(BaseModel):
     apaar_ids: List[str] = Field(default_factory=list)
     score: float = Field(..., ge=0.0, le=1.0)
     scope: DuplicateScope = Field(...)
+    evidence: Optional[Dict[str, Any]] = Field(
+        default=None, description="Evidence fields for duplicate determination"
+    )
 
 
 class Anomaly(BaseModel):

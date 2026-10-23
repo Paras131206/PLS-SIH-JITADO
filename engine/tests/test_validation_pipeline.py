@@ -56,13 +56,20 @@ def test_validate_students_with_defects_matches_ground_truth():
     defects_json = repo_root / "data" / "synthetic" / "defects.json"
     intake_csv = repo_root / "data" / "synthetic" / "intake.csv"
     registry_csv = repo_root / "data" / "synthetic" / "registry.csv"
+    central_csv = repo_root / "data" / "synthetic" / "central_snapshot.csv"
 
     with open(defects_json, mode="r", encoding="utf-8") as f:
         ground_truth_defects = json.load(f)
 
     intake_df = pd.read_csv(intake_csv)
     registry = MockApaarRegistry.from_csv(registry_csv)
-    report = validate_batch(defective_csv, intake_df=intake_df, registry=registry)
+    central_df = pd.read_csv(central_csv) if central_csv.exists() else None
+    report = validate_batch(
+        defective_csv,
+        intake_df=intake_df,
+        registry=registry,
+        central_df=central_df,
+    )
 
     # Map discovered issues by (row, rule_id)
     discovered = {(iss.row, iss.rule_id): iss for iss in report.issues}
