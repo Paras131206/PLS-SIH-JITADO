@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { BatchReport } from '../../api/types';
 import { apiFetch } from '../../api/client';
+import { FixResubmitModal } from './FixResubmitModal';
 
 export const UploadBatchView: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -27,6 +28,7 @@ export const UploadBatchView: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [progressStage, setProgressStage] = useState('');
   const [batchReport, setBatchReport] = useState<BatchReport | null>(null);
+  const [fixModalOpen, setFixModalOpen] = useState(false);
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -306,6 +308,15 @@ export const UploadBatchView: React.FC = () => {
               >
                 Upload Another File
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFixModalOpen(true)}
+                className="text-xs flex items-center gap-1.5 border-gov-saffron text-gov-saffron hover:bg-gov-saffron/10"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Fix & Resubmit</span>
+              </Button>
               <Link to="/institution/issues">
                 <Button variant="gov" size="sm" id="view-issues-btn" className="text-xs flex items-center gap-1.5">
                   <span>Inspect Issues Table ({batchReport.issues.length})</span>
@@ -403,6 +414,16 @@ export const UploadBatchView: React.FC = () => {
             </Card>
           </div>
         </div>
+      )}
+
+      {batchReport && (
+        <FixResubmitModal
+          isOpen={fixModalOpen}
+          onClose={() => setFixModalOpen(false)}
+          originalBatchId={batchReport.batch_id}
+          originalReport={batchReport}
+          onBatchUpdated={newReport => setBatchReport(newReport)}
+        />
       )}
     </div>
   );

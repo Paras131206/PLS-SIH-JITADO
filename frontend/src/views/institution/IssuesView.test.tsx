@@ -17,6 +17,8 @@ vi.mock('../../api/client', () => ({
   clearAuthToken: vi.fn(),
 }));
 
+import { AuthProvider } from '../../context/AuthContext';
+
 const renderWithClient = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -27,7 +29,9 @@ const renderWithClient = () => {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <IssuesView />
+      <AuthProvider>
+        <IssuesView />
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

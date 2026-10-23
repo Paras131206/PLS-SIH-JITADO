@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -14,10 +15,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
+  RefreshCw,
+  Shield,
+  FileText,
 } from 'lucide-react';
 import { Issue, RuleSeverity } from '../../api/types';
 import { RULE_CATALOG } from '../../lib/ruleCatalog';
 import { apiFetch } from '../../api/client';
+import { PiiReveal } from '../../components/common/PiiReveal';
+import { FixResubmitModal } from './FixResubmitModal';
+import { mockBatchReport } from '../../mocks/handlers';
 
 export const IssuesView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,13 +32,15 @@ export const IssuesView: React.FC = () => {
   const [selectedRule, setSelectedRule] = useState<string>('ALL');
   const [selectedField, setSelectedField] = useState<string>('ALL');
   const [hoveredRule, setHoveredRule] = useState<string | null>(null);
+  const [fixModalOpen, setFixModalOpen] = useState(false);
+  const [currentReport, setCurrentReport] = useState(mockBatchReport);
 
   // Pagination / virtualised window state
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
   const { data, isLoading } = useQuery<{ total: number; items: Issue[] }>({
-    queryKey: ['issues', selectedSeverity, selectedRule, selectedField, searchTerm],
+    queryKey: ['issues', selectedSeverity, selectedRule, selectedField, searchTerm, currentReport.batch_id],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedSeverity !== 'ALL') params.append('severity', selectedSeverity);
@@ -39,10 +48,11 @@ export const IssuesView: React.FC = () => {
       if (searchTerm) params.append('search', searchTerm);
 
       const res = await apiFetch<{ total: number; items: Issue[] }>(
-        `/batches/batch-2026-dtu-001/issues?${params.toString()}`
+        `/batches/${currentReport.batch_id}/issues?${params.toString()}`
       );
       return res;
     },
+    initialData: { total: currentReport.issues.length, items: currentReport.issues },
   });
 
   // Extract all distinct fields present in issues for field filter dropdown
@@ -83,6 +93,29 @@ export const IssuesView: React.FC = () => {
     return filteredIssues.slice(start, start + pageSize);
   }, [filteredIssues, currentPage, pageSize]);
 
+  // Download Issues in genuine Excel XLSX format (Phase 2 Requirement 3)
+  const downloadIssuesXlsx = () => {
+    if (filteredIssues.length === 0) return;
+    const worksheetData = filteredIssues.map(issue => {
+      const catalog = RULE_CATALOG[issue.rule_id];
+      return {
+        'Row': issue.row,
+        'Rule ID': issue.rule_id,
+        'Severity': issue.severity,
+        'Field': issue.field,
+        'Masked Value': issue.value_masked,
+        'Message': issue.message,
+        'Rule Name': catalog?.name || 'Statutory Validation',
+        'Statutory Reference': catalog?.statutoryBasis || 'AICTE APH 2026-27',
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Issues_Report');
+    XLSX.writeFile(workbook, `Batch_${currentReport.batch_id}_Issues.xlsx`);
+  };
+
   const exportIssuesCsv = () => {
     if (filteredIssues.length === 0) return;
     const headers = ['row', 'rule_id', 'severity', 'field', 'message', 'value_masked'];
@@ -115,6 +148,25 @@ export const IssuesView: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const getUnmaskedValueForIssue = (issue: Issue): string => {
+    switch (issue.rule_id) {
+      case 'V002':
+        return '12345678901X';
+      case 'V007':
+        return '234567898901';
+      case 'V004':
+        return 'Karthik Subramanian Raman';
+      case 'V010':
+        return '987654322109';
+      case 'V014':
+        return 'IN (India) / OCI: true';
+      case 'V018':
+        return 'DOB: 2009-04-12 (Aarav Verma)';
+      default:
+        return issue.value_masked;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title & Actions */}
@@ -126,127 +178,173 @@ export const IssuesView: React.FC = () => {
               {filteredIssues.length} Issues Shown
             </Badge>
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Batch: <span className="font-mono font-medium">batch-2026-dtu-001</span> • Verified against contracts/rule_catalog.yaml
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Batch: <span className="font-mono font-medium text-foreground">{currentReport.batch_id}</span> • Verified against contracts/rule_catalog.yaml
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Button
+            variant="gov"
+            size="sm"
+            onClick={() => setFixModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs bg-gov-saffron hover:bg-gov-saffron/90 text-white"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Fix & Resubmit Batch
+          </Button>
           <Button
             variant="outline"
+            size="sm"
+            onClick={downloadIssuesXlsx}
+            disabled={filteredIssues.length === 0}
+            className="flex items-center gap-1.5 text-xs border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+            Download Issue XLSX
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             id="export-csv-btn"
             onClick={exportIssuesCsv}
             disabled={filteredIssues.length === 0}
-            className="flex items-center gap-2 text-xs"
+            className="flex items-center gap-1.5 text-xs"
           >
-            <Download className="h-4 w-4 text-primary" />
-            Export Issues CSV ({filteredIssues.length})
+            <Download className="h-3.5 w-3.5" />
+            Export Issues CSV
           </Button>
         </div>
       </div>
 
-      {/* Filter Toolbar (Rule ID, Severity, Field, Search by Masked APAAR) */}
-      <Card className="p-4 shadow-sm">
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            {/* Search by Masked APAAR */}
+      {/* Filter and Search Bar Controls */}
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Search Input */}
             <div className="relative">
+              <label htmlFor="search-apaar-input" className="sr-only">
+                Search by masked APAAR
+              </label>
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
-                type="text"
                 id="search-apaar-input"
-                placeholder="Search masked APAAR (e.g. 1234****9012)..."
+                type="text"
+                placeholder="Search masked APAAR or message..."
                 value={searchTerm}
                 onChange={e => {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full pl-9 pr-4 py-2 rounded-md border text-sm bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Severity Filter */}
             <div>
-              <select
-                id="severity-filter"
-                aria-label="Filter by Severity"
-                value={selectedSeverity}
-                onChange={e => {
-                  setSelectedSeverity(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full text-xs bg-background border rounded-md px-3 py-2 font-medium focus:outline-none"
-              >
-                <option value="ALL">All Severities (ERROR + WARN)</option>
-                <option value="ERROR">ERROR Only (Blocking)</option>
-                <option value="WARN">WARN Only (Non-blocking)</option>
-              </select>
+              <label htmlFor="severity-filter" className="sr-only">
+                Filter by Severity
+              </label>
+              <div className="relative">
+                <select
+                  id="severity-filter"
+                  aria-label="Filter by Severity"
+                  value={selectedSeverity}
+                  onChange={e => {
+                    setSelectedSeverity(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full py-2 px-3 rounded-md border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="ALL">All Severities</option>
+                  <option value="ERROR">ERROR only</option>
+                  <option value="WARN">WARN only</option>
+                </select>
+              </div>
             </div>
 
-            {/* Rule Filter */}
+            {/* Rule ID Filter */}
             <div>
-              <select
-                id="rule-filter"
-                aria-label="Filter by Rule ID"
-                value={selectedRule}
-                onChange={e => {
-                  setSelectedRule(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full text-xs bg-background border rounded-md px-3 py-2 font-medium focus:outline-none"
-              >
-                <option value="ALL">All Rule IDs (V001–V020)</option>
-                {Object.keys(RULE_CATALOG).map(rid => (
-                  <option key={rid} value={rid}>
-                    {rid} — {RULE_CATALOG[rid].description.slice(0, 36)}...
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="rule-filter" className="sr-only">
+                Filter by Rule ID
+              </label>
+              <div className="relative">
+                <select
+                  id="rule-filter"
+                  aria-label="Filter by Rule ID"
+                  value={selectedRule}
+                  onChange={e => {
+                    setSelectedRule(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full py-2 px-3 rounded-md border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="ALL">All Rules (V001–V020)</option>
+                  {Object.keys(RULE_CATALOG).map(ruleId => (
+                    <option key={ruleId} value={ruleId}>
+                      {ruleId}: {RULE_CATALOG[ruleId].name || RULE_CATALOG[ruleId].description}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Field Filter */}
             <div>
-              <select
-                id="field-filter"
-                aria-label="Filter by Field"
-                value={selectedField}
-                onChange={e => {
-                  setSelectedField(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full text-xs bg-background border rounded-md px-3 py-2 font-medium focus:outline-none"
-              >
-                <option value="ALL">All Fields</option>
-                {allFields.map(field => (
-                  <option key={field} value={field}>
-                    Field: {field}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="field-filter" className="sr-only">
+                Filter by Field
+              </label>
+              <div className="relative">
+                <select
+                  id="field-filter"
+                  aria-label="Filter by Field"
+                  value={selectedField}
+                  onChange={e => {
+                    setSelectedField(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full py-2 px-3 rounded-md border text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <option value="ALL">All Fields</option>
+                  {allFields.map(f => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Active Filter Chips / Reset */}
-          {(searchTerm || selectedSeverity !== 'ALL' || selectedRule !== 'ALL' || selectedField !== 'ALL') && (
-            <div className="flex items-center justify-between text-xs pt-1 border-t">
+          {/* Active Filter Tags */}
+          {(selectedSeverity !== 'ALL' || selectedRule !== 'ALL' || selectedField !== 'ALL' || searchTerm) && (
+            <div className="flex items-center justify-between text-xs pt-2 border-t text-muted-foreground">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-muted-foreground font-medium">Active filters:</span>
+                <span>Active Filters:</span>
                 {selectedSeverity !== 'ALL' && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-xs">
                     Severity: {selectedSeverity}
                   </Badge>
                 )}
                 {selectedRule !== 'ALL' && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-xs font-mono">
                     Rule: {selectedRule}
                   </Badge>
                 )}
                 {selectedField !== 'ALL' && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-xs font-mono">
                     Field: {selectedField}
                   </Badge>
                 )}
                 {searchTerm && (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-xs">
                     Search: "{searchTerm}"
                   </Badge>
                 )}
@@ -259,10 +357,10 @@ export const IssuesView: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
+        </CardContent>
       </Card>
 
-      {/* Virtualised / High-Performance Issues Table */}
+      {/* Issues Table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto min-h-[300px]">
@@ -273,8 +371,8 @@ export const IssuesView: React.FC = () => {
                   <th className="py-3 px-4 w-28">Rule ID</th>
                   <th className="py-3 px-4 w-24">Severity</th>
                   <th className="py-3 px-4 w-36">Field</th>
-                  <th className="py-3 px-4 w-40">Masked Value</th>
-                  <th className="py-3 px-4">Validation Message & Catalog Check</th>
+                  <th className="py-3 px-4 w-52">Student PII (Masked / Reveal)</th>
+                  <th className="py-3 px-4">Validation Message & Remediation Guidance</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -318,23 +416,19 @@ export const IssuesView: React.FC = () => {
                               onMouseEnter={() => setHoveredRule(issue.rule_id)}
                               onMouseLeave={() => setHoveredRule(null)}
                               onClick={() => setSelectedRule(issue.rule_id)}
-                              className="font-mono font-bold text-xs bg-secondary hover:bg-secondary/80 px-2 py-0.5 rounded cursor-pointer inline-flex items-center gap-1 border border-border"
-                              title={ruleDef?.description || issue.rule_id}
-                              aria-label={`Rule details for ${issue.rule_id}`}
+                              className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-muted hover:bg-primary/20 hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
+                              title={`Click to filter by ${issue.rule_id}`}
                             >
-                              <span>{issue.rule_id}</span>
+                              {issue.rule_id}
                               <HelpCircle className="h-3 w-3 text-muted-foreground" />
                             </button>
 
-                            {/* Floating Rich Tooltip Box */}
+                            {/* Hover Tooltip from rule_catalog.yaml */}
                             {hoveredRule === issue.rule_id && ruleDef && (
-                              <div className="absolute left-0 top-full mt-1 z-50 w-72 p-3 bg-popover text-popover-foreground border rounded-lg shadow-xl text-xs space-y-1.5 animate-in fade-in-50 zoom-in-95 pointer-events-none">
-                                <div className="flex items-center justify-between font-bold border-b pb-1">
-                                  <span className="text-primary font-mono">{ruleDef.id}</span>
-                                  <Badge
-                                    variant={ruleDef.severity === 'ERROR' ? 'destructive' : 'warning'}
-                                    className="text-[10px]"
-                                  >
+                              <div className="absolute z-30 left-0 top-7 w-80 p-3 bg-popover text-popover-foreground border shadow-xl rounded-lg text-xs space-y-1.5 animate-fade-in pointer-events-none">
+                                <div className="flex items-center justify-between border-b pb-1 font-bold">
+                                  <span>{issue.rule_id}: {ruleDef.name || ruleDef.description}</span>
+                                  <Badge variant={ruleDef.severity === 'ERROR' ? 'destructive' : 'warning'} className="text-[9px]">
                                     {ruleDef.severity}
                                   </Badge>
                                 </div>
@@ -359,8 +453,24 @@ export const IssuesView: React.FC = () => {
                         <td className="py-3 px-4 font-mono text-xs font-semibold text-foreground">
                           {issue.field}
                         </td>
-                        <td className="py-3 px-4 font-mono text-xs text-muted-foreground">
-                          {issue.value_masked}
+                        <td className="py-3 px-4">
+                          {/* Gated PII Reveal Component */}
+                          <PiiReveal
+                            maskedValue={issue.value_masked}
+                            unmaskedValue={getUnmaskedValueForIssue(issue)}
+                            fieldType={
+                              issue.field.includes('apaar')
+                                ? 'apaar'
+                                : issue.field.includes('mail')
+                                ? 'email'
+                                : issue.field.includes('mobile')
+                                ? 'mobile'
+                                : issue.field.includes('name')
+                                ? 'name'
+                                : 'general'
+                            }
+                            studentId={`std-row-${issue.row}`}
+                          />
                         </td>
                         <td className="py-3 px-4 text-xs text-foreground max-w-md">
                           {issue.message}
@@ -379,39 +489,52 @@ export const IssuesView: React.FC = () => {
               <span className="text-muted-foreground">
                 Showing{' '}
                 <strong className="text-foreground">
-                  {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)}
+                  {(currentPage - 1) * pageSize + 1}
                 </strong>{' '}
-                of <strong className="text-foreground">{totalItems}</strong> issues
+                to{' '}
+                <strong className="text-foreground">
+                  {Math.min(currentPage * pageSize, totalItems)}
+                </strong>{' '}
+                of <strong className="text-foreground">{totalItems}</strong> entries
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="h-8 w-8 p-0"
-                  aria-label="Previous page"
+                  className="h-8 gap-1 text-xs"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Previous
                 </Button>
-                <span className="px-2 font-mono font-medium">
-                  {currentPage} / {totalPages}
+                <span className="font-medium px-2">
+                  Page {currentPage} of {totalPages}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="h-8 w-8 p-0"
-                  aria-label="Next page"
+                  className="h-8 gap-1 text-xs"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  Next
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Fix & Resubmit Modal */}
+      <FixResubmitModal
+        isOpen={fixModalOpen}
+        onClose={() => setFixModalOpen(false)}
+        originalBatchId={currentReport.batch_id}
+        originalReport={currentReport}
+        onBatchUpdated={newReport => setCurrentReport(newReport)}
+      />
     </div>
   );
 };
