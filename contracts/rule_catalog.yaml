@@ -1,0 +1,278 @@
+# contracts/rule_catalog.yaml — APAAR-SDMS Validation Rule Catalog (V001–V020)
+# Owned by Team A (Data & Intelligence). Shared contract as defined in agents.md §6.
+
+version: "1.0.0"
+rules:
+  - id: V001
+    severity: ERROR
+    description: "Required column missing from file header"
+    fields:
+      - file_header
+    params:
+      required_columns:
+        - apaar_id
+        - institution_aicte_id
+        - institution_student_id
+        - full_name
+        - dob
+        - gender
+        - category
+        - program_code
+        - course_level
+        - academic_year
+        - admission_date
+        - admission_type
+        - seat_type
+        - quota
+        - nationality
+        - nri_status
+        - oci_status
+        - fn_status
+        - enrolment_status
+        - consent_status
+
+  - id: V002
+    severity: ERROR
+    description: "apaar_id missing or not 12 digits"
+    fields:
+      - apaar_id
+    params:
+      length: 12
+      pattern: "^[0-9]{12}$"
+
+  - id: V003
+    severity: ERROR
+    description: "apaar_id not found in the (mock) APAAR registry"
+    fields:
+      - apaar_id
+    params:
+      registry_source: "mock_apaar_registry"
+
+  - id: V004
+    severity: WARN
+    description: "APAAR registry name/DOB does not match the uploaded name/DOB (fuzzy)"
+    fields:
+      - full_name
+      - dob
+    params:
+      name_similarity_threshold: 0.85
+      matching_algorithm: "token_set_ratio"
+
+  - id: V005
+    severity: ERROR
+    description: "Required field null or empty"
+    fields:
+      - apaar_id
+      - institution_aicte_id
+      - institution_student_id
+      - full_name
+      - dob
+      - gender
+      - category
+      - program_code
+      - course_level
+      - academic_year
+      - admission_date
+      - admission_type
+      - seat_type
+      - quota
+      - nationality
+      - nri_status
+      - oci_status
+      - fn_status
+      - enrolment_status
+      - consent_status
+    params:
+      allow_empty_strings: false
+
+  - id: V006
+    severity: ERROR
+    description: "Invalid format (date, enum, email, mobile, ISO country)"
+    fields:
+      - dob
+      - admission_date
+      - consent_date
+      - gender
+      - category
+      - course_level
+      - admission_type
+      - seat_type
+      - supernumerary_scheme
+      - quota
+      - enrolment_status
+      - consent_status
+      - nationality
+      - email
+      - mobile
+    params:
+      date_format: "%Y-%m-%d"
+      country_standard: "ISO-3166-1-alpha-2"
+      email_regex: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+      mobile_regex: "^[6-9][0-9]{9}$"
+
+  - id: V007
+    severity: ERROR
+    description: "Duplicate apaar_id within the batch"
+    fields:
+      - apaar_id
+    params:
+      scope: "batch"
+
+  - id: V008
+    severity: ERROR
+    description: "Duplicate institution_student_id within institution and year"
+    fields:
+      - institution_aicte_id
+      - academic_year
+      - institution_student_id
+    params:
+      group_by:
+        - institution_aicte_id
+        - academic_year
+        - institution_student_id
+
+  - id: V009
+    severity: WARN
+    description: "Probable duplicate person in the batch with a different APAAR (fuzzy name + DOB)"
+    fields:
+      - full_name
+      - dob
+      - gender
+      - apaar_id
+    params:
+      flag_threshold: 0.92
+      review_threshold: 0.75
+      blocking_keys:
+        - ["dob", "gender"]
+        - ["soundex_first_token", "dob_year"]
+
+  - id: V010
+    severity: ERROR
+    description: "Same APAAR ACTIVE at another institution in the same academic year"
+    fields:
+      - apaar_id
+      - academic_year
+      - enrolment_status
+      - institution_aicte_id
+    params:
+      active_status: "ACTIVE"
+
+  - id: V011
+    severity: WARN
+    description: "Probable same person at another institution under a different APAAR"
+    fields:
+      - full_name
+      - dob
+      - gender
+      - institution_aicte_id
+      - apaar_id
+    params:
+      flag_threshold: 0.92
+      review_threshold: 0.75
+      linkage_backend: "splink_duckdb"
+
+  - id: V012
+    severity: ERROR
+    description: "Regular-seat enrolment > approved_intake for the program"
+    fields:
+      - program_code
+      - seat_type
+      - approved_intake
+    params:
+      enrolment_seat_type: "REGULAR"
+
+  - id: V013
+    severity: ERROR
+    description: "Supernumerary count > allowed for that scheme"
+    fields:
+      - program_code
+      - seat_type
+      - supernumerary_scheme
+    params:
+      config_source: "program_intake.supernumerary_allowed"
+
+  - id: V014
+    severity: ERROR
+    description: "Quota/nationality inconsistent (OCI or FN with IN, NRI flag mismatch)"
+    fields:
+      - quota
+      - nationality
+      - nri_status
+      - oci_status
+      - fn_status
+    params:
+      rules:
+        oci_nationality_neq_in: true
+        fn_nationality_neq_in: true
+        nri_quota_requires_flag: true
+
+  - id: V015
+    severity: ERROR
+    description: "seat_type=SUPERNUMERARY with no scheme, or a scheme on a regular seat"
+    fields:
+      - seat_type
+      - supernumerary_scheme
+    params:
+      allowed_schemes:
+        - TFW
+        - PMSSS
+        - JK
+        - NE
+        - FN_OCI_NRI
+        - OTHER
+
+  - id: V016
+    severity: WARN
+    description: "Age implausible for course_level"
+    fields:
+      - dob
+      - course_level
+      - admission_date
+    params:
+      age_ranges:
+        DIPLOMA: { min: 14, max: 40 }
+        UG: { min: 16, max: 35 }
+        PG: { min: 19, max: 55 }
+        PGDM: { min: 19, max: 55 }
+        PHD: { min: 21, max: 65 }
+
+  - id: V017
+    severity: ERROR
+    description: "admission_date outside the academic-year window"
+    fields:
+      - admission_date
+      - academic_year
+    params:
+      academic_year_window_months:
+        start_offset_months: -2
+        end_offset_months: 6
+
+  - id: V018
+    severity: ERROR
+    description: "consent_status missing; or under 18 without guardian_consent"
+    fields:
+      - consent_status
+      - guardian_consent
+      - dob
+      - admission_date
+    params:
+      minor_age_threshold: 18
+
+  - id: V019
+    severity: ERROR
+    description: "program_code not in approved programs"
+    fields:
+      - program_code
+      - institution_aicte_id
+    params:
+      lookup_source: "program_intake"
+
+  - id: V020
+    severity: WARN
+    description: "Batch metric anomaly vs. institution history (null rate, NRI share, intake fill jump)"
+    fields:
+      - metrics
+    params:
+      z_score_threshold: 3.0
+      min_historical_batches: 3
+      isolation_forest_contamination: 0.05
