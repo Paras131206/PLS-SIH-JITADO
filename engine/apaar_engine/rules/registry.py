@@ -53,9 +53,11 @@ def load_rule_catalog() -> Dict[str, Any]:
 
 def register_rule(rule_id: str) -> Callable[[RuleFunction], RuleFunction]:
     """Decorator to register a validation rule function by rule ID."""
+
     def decorator(fn: RuleFunction) -> RuleFunction:
         _RULE_REGISTRY[rule_id] = fn
         return fn
+
     return decorator
 
 

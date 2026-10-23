@@ -66,8 +66,7 @@ def validate_v001_header(df: pd.DataFrame, rule_meta: Dict[str, Any], **kwargs: 
     """V001: Required column missing from file header."""
     issues: List[Issue] = []
     required_cols = (
-        rule_meta.get("params", {}).get("required_columns")
-        or CANONICAL_REQUIRED_COLUMNS
+        rule_meta.get("params", {}).get("required_columns") or CANONICAL_REQUIRED_COLUMNS
     )
 
     present_cols = set(df.columns)
@@ -207,7 +206,7 @@ def validate_v006_format(
         if enum_col == "supernumerary_scheme":
             check_mask = (raw_vals != "") & (~raw_vals.str.lower().isin(["nan", "none", "null"]))
         else:
-            check_mask = (raw_vals != "")
+            check_mask = raw_vals != ""
 
         invalid_mask = check_mask & (~raw_vals.isin(allowed_vals))
         if invalid_mask.any():
@@ -225,7 +224,7 @@ def validate_v006_format(
     # 3. ISO-3166-1 alpha-2 country validation
     if "nationality" in df.columns:
         nat_vals = df["nationality"].fillna("").astype(str).str.strip()
-        non_empty = (nat_vals != "")
+        non_empty = nat_vals != ""
         invalid_nat = non_empty & (~nat_vals.str.match(ISO2_REGEX))
         if invalid_nat.any():
             for r_num, bad_val in zip(row_nums[invalid_nat], nat_vals[invalid_nat]):

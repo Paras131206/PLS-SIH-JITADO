@@ -30,7 +30,11 @@ def test_roundtrip_students_csv():
         assert record.apaar_id.isdigit()
         assert record.apaar_masked == f"{record.apaar_id[:4]}****{record.apaar_id[8:]}"
         assert record.institution_aicte_id in [
-            "1-10001", "1-10002", "1-10003", "1-10004", "1-10005"
+            "1-10001",
+            "1-10002",
+            "1-10003",
+            "1-10004",
+            "1-10005",
         ]
         assert record.program_code in ["UG-CSE", "UG-ECE", "UG-MECH"]
         assert record.academic_year == "2026-27"

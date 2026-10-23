@@ -93,13 +93,13 @@
     "row": 160,
     "rule_id": "V007",
     "field": "apaar_id",
-    "description": "Duplicate apaar_id 888877776666 at row 160"
+    "description": "Duplicate apaar_id 420156188169 at row 160"
   },
   {
     "row": 165,
     "rule_id": "V007",
     "field": "apaar_id",
-    "description": "Duplicate apaar_id 888877776666 at row 165"
+    "description": "Duplicate apaar_id 420156188169 at row 165"
   },
   {
     "row": 180,
@@ -112,5 +112,89 @@
     "rule_id": "V008",
     "field": "institution_student_id",
     "description": "Duplicate student ID 2026-MECH-0045 at row 185"
+  },
+  {
+    "row": 200,
+    "rule_id": "V014",
+    "field": "nationality",
+    "description": "OCI student with Indian nationality"
+  },
+  {
+    "row": 210,
+    "rule_id": "V014",
+    "field": "nationality",
+    "description": "Foreign National student with Indian nationality"
+  },
+  {
+    "row": 220,
+    "rule_id": "V014",
+    "field": "nri_status",
+    "description": "NRI quota with nri_status=False"
+  },
+  {
+    "row": 230,
+    "rule_id": "V015",
+    "field": "supernumerary_scheme",
+    "description": "SUPERNUMERARY seat without scheme"
+  },
+  {
+    "row": 240,
+    "rule_id": "V015",
+    "field": "supernumerary_scheme",
+    "description": "Supernumerary scheme on REGULAR seat"
+  },
+  {
+    "row": 250,
+    "rule_id": "V016",
+    "field": "dob",
+    "description": "Student age 18 is implausible for course_level 'PHD' (min 21)"
+  },
+  {
+    "row": 260,
+    "rule_id": "V017",
+    "field": "admission_date",
+    "description": "admission_date 2025-01-15 outside 2026-27 window"
+  },
+  {
+    "row": 270,
+    "rule_id": "V018",
+    "field": "consent_status",
+    "description": "consent_status is REFUSED"
+  },
+  {
+    "row": 280,
+    "rule_id": "V018",
+    "field": "guardian_consent",
+    "description": "Minor student without guardian consent"
+  },
+  {
+    "row": 290,
+    "rule_id": "V019",
+    "field": "program_code",
+    "description": "Program UG-AEROSPACE is not approved"
+  },
+  {
+    "row": 300,
+    "rule_id": "V003",
+    "field": "apaar_id",
+    "description": "apaar_id 777711112222 not in mock registry"
+  },
+  {
+    "row": 310,
+    "rule_id": "V004",
+    "field": "full_name",
+    "description": "Uploaded name does not match APAAR registry name"
+  },
+  {
+    "row": 402,
+    "rule_id": "V012",
+    "field": "approved_intake",
+    "description": "Regular enrolment exceeds approved intake (65) for UG-MECH"
+  },
+  {
+    "row": 403,
+    "rule_id": "V012",
+    "field": "approved_intake",
+    "description": "Regular enrolment exceeds approved intake (65) for UG-MECH"
   }
 ]

@@ -22,6 +22,8 @@ from apaar_engine.models import (
     mask_apaar,
 )
 from apaar_engine.parser import parse_file
+from apaar_engine.registry import MockApaarRegistry
+from apaar_engine.reports.dq_report import export_dq_report_json, export_dq_report_xlsx
 from apaar_engine.validate import compute_batch_metrics, validate_batch
 
 __all__ = [
@@ -37,6 +39,7 @@ __all__ = [
     "Gender",
     "IntakeSummary",
     "Issue",
+    "MockApaarRegistry",
     "ProgramIntake",
     "Quota",
     "SeatType",
@@ -44,6 +47,8 @@ __all__ = [
     "StudentRecord",
     "SupernumeraryScheme",
     "compute_batch_metrics",
+    "export_dq_report_json",
+    "export_dq_report_xlsx",
     "mask_apaar",
     "parse_file",
     "validate_batch",

@@ -25,10 +25,10 @@ def test_v001_missing_header():
 def test_v002_apaar_format():
     data = [
         {"apaar_id": "123456789012", "_row_num": 2},  # Valid
-        {"apaar_id": "12345678901", "_row_num": 3},   # 11 digits
-        {"apaar_id": "1234567890123", "_row_num": 4}, # 13 digits
+        {"apaar_id": "12345678901", "_row_num": 3},  # 11 digits
+        {"apaar_id": "1234567890123", "_row_num": 4},  # 13 digits
         {"apaar_id": "12345678901A", "_row_num": 5},  # Non-digit
-        {"apaar_id": "", "_row_num": 6},               # Empty
+        {"apaar_id": "", "_row_num": 6},  # Empty
     ]
     df = pd.DataFrame(data)
     issues = run_rule("V002", df)
@@ -57,17 +57,17 @@ def test_v005_required_fields():
 def test_v006_format_checks():
     data = [
         {
-            "dob": "2005/05/10",         # Bad date
+            "dob": "2005/05/10",  # Bad date
             "admission_date": "2026-07-01",
-            "gender": "X",               # Bad enum
-            "category": "GENERAL",       # Bad enum
-            "nationality": "INDIA",      # Bad ISO
-            "email": "not_an_email",     # Bad email
-            "mobile": "12345",           # Bad mobile
+            "gender": "X",  # Bad enum
+            "category": "GENERAL",  # Bad enum
+            "nationality": "INDIA",  # Bad ISO
+            "email": "not_an_email",  # Bad email
+            "mobile": "12345",  # Bad mobile
             "_row_num": 2,
         },
         {
-            "dob": "2005-05-10",         # Good
+            "dob": "2005-05-10",  # Good
             "admission_date": "2026-07-01",
             "gender": "M",
             "category": "GEN",

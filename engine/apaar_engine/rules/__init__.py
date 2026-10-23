@@ -3,7 +3,11 @@
 Rules package and registry exports.
 """
 
-# Import schema_rules to trigger rule registration
+import apaar_engine.rules.consistency_rules  # noqa: F401
+import apaar_engine.rules.intake_rules  # noqa: F401
+import apaar_engine.rules.registry_rules  # noqa: F401
+
+# Trigger rule registrations across modules
 import apaar_engine.rules.schema_rules  # noqa: F401
 from apaar_engine.rules.registry import (
     get_registered_rules,
