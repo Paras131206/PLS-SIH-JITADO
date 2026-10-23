@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { test, expect } from '@playwright/test';
 
 test.describe('Phase 1 Smoke Test: Login → Upload Batch → Issues Table', () => {
