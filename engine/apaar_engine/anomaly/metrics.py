@@ -15,7 +15,7 @@ Owned by Team A (Data & Intelligence).
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from uuid import uuid4
 
 import pandas as pd
@@ -79,8 +79,10 @@ class BatchMetricState(BaseModel):
         return self.model_dump_json(indent=2)
 
     @classmethod
-    def from_json(cls, json_str: str) -> BatchMetricState:
-        """Deserialize state from JSON string."""
+    def from_json(cls, json_str: Union[str, Dict[str, Any]]) -> BatchMetricState:
+        """Deserialize state from JSON string or dictionary."""
+        if isinstance(json_str, dict):
+            return cls.model_validate(json_str)
         return cls.model_validate_json(json_str)
 
     @classmethod

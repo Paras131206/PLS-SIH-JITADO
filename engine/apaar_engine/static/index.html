@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APAAR-SDMS • AICTE Data Quality & Intelligence Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070b14;
+      --card-bg: #0e1526;
+      --card-border: #1e293b;
+      --card-hover: #172033;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.2);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --purple: #8b5cf6;
+      --indigo: #6366f1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 15% 15%, #0f172a 0%, #070b14 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(14, 21, 38, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem 2.5rem;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .hero-card {
+      background: linear-gradient(145deg, #0f172a 0%, #111a30 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .hero-title h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .hero-title p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .actions-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 0.65rem 1.25rem;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: white;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      transform: translateY(-1px);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      box-shadow: 0 4px 14px var(--emerald-glow);
+    }
+    .btn-emerald:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+    }
+    .btn-outline:hover {
+      background: #1e293b;
+      color: white;
+    }
+
+    .upload-zone {
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+    }
+    .upload-zone p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    .upload-zone strong {
+      color: #f1f5f9;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: transform 0.2s ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      background: var(--card-hover);
+    }
+
+    .kpi-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 8px;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(30, 41, 59, 0.4);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: #1e293b;
+      font-weight: 600;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .table-toolbar {
+      padding: 1rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      min-width: 260px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background: #0b1120;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+      color: #e2e8f0;
+    }
+
+    tr:hover td {
+      background: rgba(30, 41, 59, 0.3);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-error {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .badge-warn {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .badge-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-indigo {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #64748b;
+      font-size: 0.8rem;
+      border-top: 1px solid var(--card-border);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo-badge">APAAR</div>
+      <div>
+        <div class="brand-title">AICTE Student Data Quality Engine</div>
+        <div class="brand-sub">Team A • Core Verification & Intelligence</div>
+      </div>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span>Engine Active (V001–V020)</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero-card">
+      <div class="hero-header">
+        <div class="hero-title">
+          <h2>Batch Validation & Anomaly Intelligence Console</h2>
+          <p>Real-time execution of vectorised rules, cross-institutional deduplication, and Deequ-style distribution checks.</p>
+        </div>
+        <div class="actions-group">
+          <button class="btn-primary" id="btn-defects" onclick="loadSample('defects')">
+            ⚡ Run Injected Defects Batch (1,000 Rows)
+          </button>
+          <button class="btn-emerald" id="btn-clean" onclick="loadSample('clean')">
+            ✨ Run Clean Batch (1,000 Rows)
+          </button>
+          <button class="btn-outline" onclick="downloadExport('json')">
+            💾 Export JSON
+          </button>
+          <button class="btn-outline" onclick="downloadExport('xlsx')">
+            📊 Export Excel (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" style="display:none;" accept=".csv,.xlsx" onchange="uploadCustomFile(event)">
+        <p>📁 Drag and drop any <strong>.csv</strong> or <strong>.xlsx</strong> student batch file here, or click to browse</p>
+        <span style="font-size: 0.75rem; color: #64748b;">Supports multi-institution records, canonical headers, and automated alias normalization</span>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Data Quality Score</div>
+        <div class="kpi-value" id="kpi-score" style="color: #60a5fa;">--</div>
+        <div class="kpi-sub">Weighted (Completeness, Validity, Uniqueness, Consistency)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Total Records</div>
+        <div class="kpi-value" id="kpi-total">--</div>
+        <div class="kpi-sub" id="kpi-valid-sub">-- valid records</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Errors Flagged</div>
+        <div class="kpi-value" id="kpi-errors" style="color: #fb7185;">--</div>
+        <div class="kpi-sub" id="kpi-warn-sub">-- warnings flagged</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Duplicate Clusters</div>
+        <div class="kpi-value" id="kpi-duplicates" style="color: #818cf8;">--</div>
+        <div class="kpi-sub">V009 intra & V010/V011 cross-institution</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Metric Anomalies</div>
+        <div class="kpi-value" id="kpi-anomalies" style="color: #fbbf24;">--</div>
+        <div class="kpi-sub">V020 distribution shifts vs history</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-issues')">🚨 Issues & Violations (<span id="count-issues">0</span>)</button>
+        <button class="tab-btn" onclick="switchTab('tab-dedup')">👥 Deduplication Clusters (<span id="count-dedup">0</span>)</button>
+        <button class="tab-btn" onclick="switchTab('tab-intake')">📋 Program Intake Summary</button>
+        <button class="tab-btn" onclick="switchTab('tab-anomalies')">📈 Metric Anomalies (<span id="count-anomalies">0</span>)</button>
+        <button class="tab-btn" onclick="switchTab('tab-metrics')">📊 Column Completeness</button>
+      </div>
+
+      <div class="tab-pane active" id="tab-issues">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <input type="text" class="search-input" id="search-issues" placeholder="Filter by rule, field, row or message..." oninput="renderIssues()">
+            <div style="font-size: 0.8rem; color: #94a3b8;">
+              Showing all discovered rule violations
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 80px;">Row</th>
+                <th style="width: 100px;">Rule ID</th>
+                <th style="width: 100px;">Severity</th>
+                <th style="width: 140px;">Field</th>
+                <th>Message</th>
+                <th style="width: 150px;">Value (Masked)</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-issues">
+              <tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">Load or upload a batch to view validation results.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-dedup">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 160px;">Cluster ID</th>
+                <th style="width: 140px;">Scope</th>
+                <th style="width: 100px;">Similarity</th>
+                <th style="width: 120px;">APAAR IDs</th>
+                <th>Matching Evidence Details</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-dedup">
+              <tr><td colspan="5" style="text-align:center; padding: 2rem; color: #64748b;">No duplicate clusters detected.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-intake">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Program Code</th>
+                <th>Approved Intake</th>
+                <th>Regular Enrolled</th>
+                <th>Supernumerary Count</th>
+                <th>Supernumerary By Scheme</th>
+                <th>Excess Enrolment</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-intake">
+              <tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">No intake data available.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-anomalies">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Metric Name</th>
+                <th>Batch Value</th>
+                <th>Historical Baseline</th>
+                <th>Z-Score</th>
+                <th>Human-Readable Reason</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-anomalies">
+              <tr><td colspan="5" style="text-align:center; padding: 2rem; color: #64748b;">No metric anomalies detected.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="tab-metrics">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Column Name</th>
+                <th>Completeness (Non-Null %)</th>
+                <th>Uniqueness Ratio</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-metrics">
+              <tr><td colspan="3" style="text-align:center; padding: 2rem; color: #64748b;">No metrics available.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    AICTE APAAR-SDMS Data Quality & Intelligence Engine • Powered by Google Antigravity & DeepMind Team A
+  </footer>
+
+  <script>
+    let currentReport = null;
+
+    async function loadSample(type) {
+      const btn = document.getElementById(type === 'defects' ? 'btn-defects' : 'btn-clean');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Validating...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/sample/${type}`);
+        const data = await res.json();
+        currentReport = data;
+        renderReport(data);
+      } catch (err) {
+        alert('Validation error: ' + err);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function uploadCustomFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/validate', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        currentReport = data;
+        renderReport(data);
+      } catch (err) {
+        alert('File validation error: ' + err);
+      }
+    }
+
+    function renderReport(r) {
+      document.getElementById('kpi-score').textContent = (r.quality_score || 0).toFixed(1) + '/100';
+      document.getElementById('kpi-total').textContent = (r.rows_total || 0).toLocaleString();
+      document.getElementById('kpi-valid-sub').textContent = `${(r.rows_valid || 0).toLocaleString()} clean records`;
+      document.getElementById('kpi-errors').textContent = (r.rows_error || 0).toLocaleString();
+      document.getElementById('kpi-warn-sub').textContent = `${(r.rows_warning || 0).toLocaleString()} warning flags`;
+      
+      const dedupCount = (r.duplicate_clusters || []).length;
+      document.getElementById('kpi-duplicates').textContent = dedupCount;
+      document.getElementById('count-dedup').textContent = dedupCount;
+
+      const anomCount = (r.anomalies || []).length;
+      document.getElementById('kpi-anomalies').textContent = anomCount;
+      document.getElementById('count-anomalies').textContent = anomCount;
+
+      document.getElementById('count-issues').textContent = (r.issues || []).length;
+
+      renderIssues();
+      renderDedup();
+      renderIntake();
+      renderAnomalies();
+      renderMetrics();
+    }
+
+    function renderIssues() {
+      const tbody = document.getElementById('tbody-issues');
+      const q = (document.getElementById('search-issues').value || '').toLowerCase();
+      if (!currentReport || !currentReport.issues || currentReport.issues.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">No issues detected. Batch is clean!</td></tr>';
+        return;
+      }
+
+      const filtered = currentReport.issues.filter(iss => {
+        return (iss.rule_id || '').toLowerCase().includes(q) ||
+               (iss.field || '').toLowerCase().includes(q) ||
+               (iss.message || '').toLowerCase().includes(q) ||
+               String(iss.row).includes(q);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">No issues match your filter query.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(iss => {
+        const badgeClass = iss.severity === 'ERROR' ? 'badge-error' : 'badge-warn';
+        return `<tr>
+          <td><strong>${iss.row}</strong></td>
+          <td><span class="badge badge-indigo">${iss.rule_id}</span></td>
+          <td><span class="badge ${badgeClass}">${iss.severity}</span></td>
+          <td><code>${iss.field}</code></td>
+          <td>${iss.message}</td>
+          <td><code>${iss.value_masked || '--'}</code></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderDedup() {
+      const tbody = document.getElementById('tbody-dedup');
+      const clusters = (currentReport && currentReport.duplicate_clusters) || [];
+      if (clusters.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #64748b;">No duplicate clusters detected.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = clusters.map(c => {
+        const ev = c.evidence || {};
+        let evStr = Object.entries(ev).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join(' | ');
+        return `<tr>
+          <td><code>${c.cluster_id}</code></td>
+          <td><span class="badge badge-indigo">${c.scope}</span></td>
+          <td><strong>${(c.score * 100).toFixed(1)}%</strong></td>
+          <td>${(c.apaar_ids || []).map(a => `<code>${a}</code>`).join(', ')}</td>
+          <td style="font-size: 0.8rem; color: #cbd5e1;">${evStr}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderIntake() {
+      const tbody = document.getElementById('tbody-intake');
+      const summaries = (currentReport && currentReport.intake_summary) || [];
+      if (summaries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #64748b;">No intake data available.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = summaries.map(s => {
+        const excessBadge = s.excess > 0 ? `<span class="badge badge-error">+${s.excess} EXCESS</span>` : '<span class="badge badge-success">OK</span>';
+        const schemeObj = s.supernumerary_by_scheme || {};
+        const schemeStr = Object.entries(schemeObj).map(([sch, cnt]) => `${sch}: ${cnt}`).join(', ') || 'None';
+        return `<tr>
+          <td><strong>${s.program_code}</strong></td>
+          <td>${s.approved}</td>
+          <td>${s.enrolled_regular || s.enrolled}</td>
+          <td>${s.supernumerary}</td>
+          <td>${schemeStr}</td>
+          <td>${excessBadge}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderAnomalies() {
+      const tbody = document.getElementById('tbody-anomalies');
+      const anoms = (currentReport && currentReport.anomalies) || [];
+      if (anoms.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #64748b;">No statistical anomalies detected.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = anoms.map(a => {
+        return `<tr>
+          <td><strong>${a.metric}</strong></td>
+          <td>${(a.value * 100).toFixed(2)}%</td>
+          <td>${(a.baseline * 100).toFixed(2)}%</td>
+          <td><span class="badge badge-warn">${(a.z || 0).toFixed(2)}σ</span></td>
+          <td>${a.reason}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderMetrics() {
+      const tbody = document.getElementById('tbody-metrics');
+      const metrics = (currentReport && currentReport.metrics) || {};
+      const comp = metrics.completeness || {};
+      const uniq = metrics.uniqueness || {};
+      const cols = Object.keys(comp);
+
+      if (cols.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem; color: #64748b;">No column metrics available.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = cols.map(c => {
+        const cVal = ((comp[c] || 0) * 100).toFixed(1) + '%';
+        const uVal = uniq[c] !== undefined ? ((uniq[c] || 0) * 100).toFixed(1) + '%' : '--';
+        return `<tr>
+          <td><code>${c}</code></td>
+          <td>${cVal}</td>
+          <td>${uVal}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function downloadExport(format) {
+      if (!currentReport) {
+        alert('Please run or upload a batch before exporting.');
+        return;
+      }
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(currentReport, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BatchReport_${currentReport.batch_id || 'sample'}.json`;
+        a.click();
+      } else if (format === 'xlsx') {
+        window.location.href = '/api/export-xlsx';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSample('defects');
+    });
+  </script>
+</body>
+</html>
