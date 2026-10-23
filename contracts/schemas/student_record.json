@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aicte.gov.in/schemas/student_record.json",
+  "title": "StudentRecord",
+  "description": "Canonical schema for student-level admission data (agents.md §5.1)",
+  "type": "object",
+  "required": [
+    "apaar_id",
+    "institution_aicte_id",
+    "institution_student_id",
+    "full_name",
+    "dob",
+    "gender",
+    "category",
+    "program_code",
+    "course_level",
+    "academic_year",
+    "admission_date",
+    "admission_type",
+    "seat_type",
+    "quota",
+    "nationality",
+    "nri_status",
+    "oci_status",
+    "fn_status",
+    "enrolment_status",
+    "consent_status"
+  ],
+  "properties": {
+    "apaar_id": {
+      "type": "string",
+      "description": "12-digit Automated Permanent Academic Account Registry ID",
+      "pattern": "^[0-9]{12}$",
+      "minLength": 12,
+      "maxLength": 12
+    },
+    "institution_aicte_id": {
+      "type": "string",
+      "description": "AICTE approved institution identifier",
+      "minLength": 1
+    },
+    "institution_student_id": {
+      "type": "string",
+      "description": "Roll or enrolment number unique within institution and academic year",
+      "minLength": 1
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full legal name of the student",
+      "minLength": 1
+    },
+    "dob": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth in YYYY-MM-DD format"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["M", "F", "T"],
+      "description": "M (Male), F (Female), T (Transgender)"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["GEN", "EWS", "OBC-NCL", "SC", "ST"],
+      "description": "Social reservation category"
+    },
+    "pwd": {
+      "type": "boolean",
+      "default": false,
+      "description": "Persons with Benchmark Disabilities"
+    },
+    "program_code": {
+      "type": "string",
+      "description": "AICTE approved program code (must exist in program_intake)",
+      "minLength": 1
+    },
+    "course_level": {
+      "type": "string",
+      "enum": ["DIPLOMA", "UG", "PG", "PGDM", "PHD"],
+      "description": "Academic course level"
+    },
+    "academic_year": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}$",
+      "description": "Academic year in format YYYY-YY (e.g. 2026-27)"
+    },
+    "admission_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Admission date in YYYY-MM-DD format"
+    },
+    "admission_type": {
+      "type": "string",
+      "enum": ["REGULAR", "LATERAL", "TRANSFER"],
+      "description": "Type of admission entry"
+    },
+    "seat_type": {
+      "type": "string",
+      "enum": ["REGULAR", "SUPERNUMERARY"],
+      "description": "Seat allocation category"
+    },
+    "supernumerary_scheme": {
+      "type": ["string", "null"],
+      "enum": ["TFW", "PMSSS", "JK", "NE", "FN_OCI_NRI", "OTHER", null],
+      "description": "Supernumerary scheme if seat_type is SUPERNUMERARY"
+    },
+    "quota": {
+      "type": "string",
+      "enum": ["NONE", "NRI", "OCI", "FN", "PIO", "CIWG"],
+      "description": "Admission quota category"
+    },
+    "nationality": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "ISO-3166 alpha-2 country code (e.g. IN)"
+    },
+    "nri_status": {
+      "type": "boolean",
+      "description": "Non-Resident Indian status"
+    },
+    "oci_status": {
+      "type": "boolean",
+      "description": "Overseas Citizen of India status (requires nationality != IN)"
+    },
+    "fn_status": {
+      "type": "boolean",
+      "description": "Foreign National status (requires nationality != IN)"
+    },
+    "enrolment_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "WITHDRAWN", "DEFERRED", "COMPLETED"],
+      "description": "Current status of student enrolment"
+    },
+    "consent_status": {
+      "type": "string",
+      "enum": ["GRANTED", "REFUSED", "WITHDRAWN"],
+      "description": "Student consent status for APAAR record processing"
+    },
+    "consent_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Date consent was granted (required if consent_status is GRANTED)"
+    },
+    "guardian_consent": {
+      "type": ["boolean", "null"],
+      "description": "Guardian consent flag (required if student age < 18)"
+    },
+    "email": {
+      "type": ["string", "null"],
+      "format": "email",
+      "description": "Student email address (encrypted at rest, masked in UI)"
+    },
+    "mobile": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{10}$",
+      "description": "10-digit mobile number (encrypted at rest, masked in UI)"
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": { "seat_type": { "const": "SUPERNUMERARY" } }
+  },
+  "then": {
+    "required": ["supernumerary_scheme"],
+    "properties": {
+      "supernumerary_scheme": { "type": "string" }
+    }
+  }
+}
