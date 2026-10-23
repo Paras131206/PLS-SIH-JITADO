@@ -30,7 +30,11 @@ def test_roundtrip_students_csv():
         assert record.apaar_id.isdigit()
         assert record.apaar_masked == f"{record.apaar_id[:4]}****{record.apaar_id[8:]}"
         assert record.institution_aicte_id in [
-            "1-10001", "1-10002", "1-10003", "1-10004", "1-10005"
+            "1-10001",
+            "1-10002",
+            "1-10003",
+            "1-10004",
+            "1-10005",
         ]
         assert record.program_code in ["UG-CSE", "UG-ECE", "UG-MECH"]
         assert record.academic_year == "2026-27"
@@ -94,9 +98,14 @@ def test_mock_registry_consistency():
         assert reg_row["gender"] == s["gender"]
 
 
-def test_defects_json_empty():
+def test_defects_json_structure():
     defects_path = Path(__file__).resolve().parents[2] / "data" / "synthetic" / "defects.json"
     assert defects_path.exists()
     with open(defects_path, mode="r", encoding="utf-8") as f:
         defects = json.load(f)
-    assert defects == []
+    assert isinstance(defects, list)
+    for defect in defects:
+        assert "row" in defect
+        assert "rule_id" in defect
+        assert "field" in defect
+        assert "description" in defect

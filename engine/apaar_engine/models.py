@@ -33,6 +33,7 @@ def mask_apaar(apaar_id: Optional[str]) -> str:
 # Enums defined in agents.md §5.1
 # ---------------------------------------------------------------------------
 
+
 class Gender(str, Enum):
     M = "M"
     F = "F"
@@ -112,11 +113,13 @@ class DuplicateScope(str, Enum):
 # 5.1 StudentRecord
 # ---------------------------------------------------------------------------
 
+
 class StudentRecord(BaseModel):
     """Canonical student record model matching agents.md §5.1.
 
     Represents one row per student per program per academic year.
     """
+
     model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     apaar_id: str = Field(..., description="Exactly 12 digits")
@@ -154,9 +157,7 @@ class StudentRecord(BaseModel):
     consent_status: ConsentStatus = Field(..., description="GRANTED/REFUSED/WITHDRAWN")
     consent_date: Optional[date] = Field(default=None, description="Date consent granted")
     guardian_consent: Optional[bool] = Field(default=None, description="Required if age < 18")
-    email: Optional[str] = Field(
-        default=None, description="Email address (masked/encrypted in DB)"
-    )
+    email: Optional[str] = Field(default=None, description="Email address (masked/encrypted in DB)")
     mobile: Optional[str] = Field(
         default=None, description="Mobile number (masked/encrypted in DB)"
     )
@@ -209,8 +210,10 @@ class StudentRecord(BaseModel):
 # 5.2 ProgramIntake
 # ---------------------------------------------------------------------------
 
+
 class ProgramIntake(BaseModel):
     """Program intake model matching agents.md §5.2."""
+
     model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     institution_aicte_id: str = Field(..., description="Institution AICTE ID")
@@ -243,8 +246,10 @@ class ProgramIntake(BaseModel):
 # 5.3 BatchReport and sub-models
 # ---------------------------------------------------------------------------
 
+
 class Issue(BaseModel):
     """Validation issue model matching agents.md §5.3."""
+
     row: Optional[int] = Field(default=None, description="CSV row number (1-indexed)")
     field: Optional[str] = Field(default=None, description="Field or column name")
     rule_id: str = Field(..., description="Rule catalog ID e.g. V002")
@@ -255,15 +260,21 @@ class Issue(BaseModel):
 
 class IntakeSummary(BaseModel):
     """Intake summary element per program code matching agents.md §5.3."""
+
     program_code: str = Field(...)
     approved: int = Field(..., ge=0)
     enrolled: int = Field(..., ge=0)
     supernumerary: int = Field(..., ge=0)
     excess: int = Field(default=0, description="Enrolled regular beyond approved intake")
+    enrolled_regular: int = Field(default=0, description="Regular enrolled students")
+    supernumerary_by_scheme: Dict[str, int] = Field(
+        default_factory=dict, description="Supernumerary enrolments per scheme"
+    )
 
 
 class DuplicateCluster(BaseModel):
     """Duplicate cluster matching agents.md §5.3."""
+
     cluster_id: str = Field(...)
     apaar_ids: List[str] = Field(default_factory=list)
     score: float = Field(..., ge=0.0, le=1.0)
@@ -272,6 +283,7 @@ class DuplicateCluster(BaseModel):
 
 class Anomaly(BaseModel):
     """Anomaly detection item matching agents.md §5.3."""
+
     metric: str = Field(..., description="e.g. nri_share, intake_fill_jump")
     value: float = Field(...)
     baseline: float = Field(...)
@@ -281,6 +293,7 @@ class Anomaly(BaseModel):
 
 class BatchReport(BaseModel):
     """Complete batch validation report matching agents.md §5.3."""
+
     batch_id: str = Field(..., description="Batch UUID")
     institution_aicte_id: str = Field(...)
     rows_total: int = Field(default=0, ge=0)

@@ -1,1 +1,200 @@
-[]
+[
+  {
+    "row": 10,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id has 11 digits"
+  },
+  {
+    "row": 20,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id contains alphanumeric characters"
+  },
+  {
+    "row": 30,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id has 13 digits"
+  },
+  {
+    "row": 40,
+    "rule_id": "V005",
+    "field": "full_name",
+    "description": "Required field full_name is empty"
+  },
+  {
+    "row": 50,
+    "rule_id": "V005",
+    "field": "dob",
+    "description": "Required field dob is empty"
+  },
+  {
+    "row": 60,
+    "rule_id": "V005",
+    "field": "category",
+    "description": "Required field category is empty"
+  },
+  {
+    "row": 70,
+    "rule_id": "V005",
+    "field": "admission_date",
+    "description": "Required field admission_date is empty"
+  },
+  {
+    "row": 80,
+    "rule_id": "V006",
+    "field": "dob",
+    "description": "Invalid date format for dob: 15/08/2005"
+  },
+  {
+    "row": 90,
+    "rule_id": "V006",
+    "field": "admission_date",
+    "description": "Invalid date format for admission_date: 2026-13-40"
+  },
+  {
+    "row": 100,
+    "rule_id": "V006",
+    "field": "gender",
+    "description": "Invalid enum value 'X' for gender"
+  },
+  {
+    "row": 110,
+    "rule_id": "V006",
+    "field": "category",
+    "description": "Invalid enum value 'GENERAL' for category"
+  },
+  {
+    "row": 120,
+    "rule_id": "V006",
+    "field": "course_level",
+    "description": "Invalid enum value 'BACHELORS' for course_level"
+  },
+  {
+    "row": 130,
+    "rule_id": "V006",
+    "field": "nationality",
+    "description": "Invalid nationality 'INDIA' (must be 2-letter ISO code)"
+  },
+  {
+    "row": 140,
+    "rule_id": "V006",
+    "field": "email",
+    "description": "Invalid email format"
+  },
+  {
+    "row": 150,
+    "rule_id": "V006",
+    "field": "mobile",
+    "description": "Invalid mobile format (too short)"
+  },
+  {
+    "row": 160,
+    "rule_id": "V007",
+    "field": "apaar_id",
+    "description": "Duplicate apaar_id 420156188169 at row 160"
+  },
+  {
+    "row": 165,
+    "rule_id": "V007",
+    "field": "apaar_id",
+    "description": "Duplicate apaar_id 420156188169 at row 165"
+  },
+  {
+    "row": 180,
+    "rule_id": "V008",
+    "field": "institution_student_id",
+    "description": "Duplicate student ID 2026-MECH-0045 at row 180"
+  },
+  {
+    "row": 185,
+    "rule_id": "V008",
+    "field": "institution_student_id",
+    "description": "Duplicate student ID 2026-MECH-0045 at row 185"
+  },
+  {
+    "row": 200,
+    "rule_id": "V014",
+    "field": "nationality",
+    "description": "OCI student with Indian nationality"
+  },
+  {
+    "row": 210,
+    "rule_id": "V014",
+    "field": "nationality",
+    "description": "Foreign National student with Indian nationality"
+  },
+  {
+    "row": 220,
+    "rule_id": "V014",
+    "field": "nri_status",
+    "description": "NRI quota with nri_status=False"
+  },
+  {
+    "row": 230,
+    "rule_id": "V015",
+    "field": "supernumerary_scheme",
+    "description": "SUPERNUMERARY seat without scheme"
+  },
+  {
+    "row": 240,
+    "rule_id": "V015",
+    "field": "supernumerary_scheme",
+    "description": "Supernumerary scheme on REGULAR seat"
+  },
+  {
+    "row": 250,
+    "rule_id": "V016",
+    "field": "dob",
+    "description": "Student age 18 is implausible for course_level 'PHD' (min 21)"
+  },
+  {
+    "row": 260,
+    "rule_id": "V017",
+    "field": "admission_date",
+    "description": "admission_date 2025-01-15 outside 2026-27 window"
+  },
+  {
+    "row": 270,
+    "rule_id": "V018",
+    "field": "consent_status",
+    "description": "consent_status is REFUSED"
+  },
+  {
+    "row": 280,
+    "rule_id": "V018",
+    "field": "guardian_consent",
+    "description": "Minor student without guardian consent"
+  },
+  {
+    "row": 290,
+    "rule_id": "V019",
+    "field": "program_code",
+    "description": "Program UG-AEROSPACE is not approved"
+  },
+  {
+    "row": 300,
+    "rule_id": "V003",
+    "field": "apaar_id",
+    "description": "apaar_id 777711112222 not in mock registry"
+  },
+  {
+    "row": 310,
+    "rule_id": "V004",
+    "field": "full_name",
+    "description": "Uploaded name does not match APAAR registry name"
+  },
+  {
+    "row": 402,
+    "rule_id": "V012",
+    "field": "approved_intake",
+    "description": "Regular enrolment exceeds approved intake (65) for UG-MECH"
+  },
+  {
+    "row": 403,
+    "rule_id": "V012",
+    "field": "approved_intake",
+    "description": "Regular enrolment exceeds approved intake (65) for UG-MECH"
+  }
+]
