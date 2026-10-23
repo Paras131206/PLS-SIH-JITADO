@@ -9,6 +9,8 @@ export interface RuleDefinition {
   description: string;
   fields: string[];
   paramsDescription?: string;
+  name?: string;
+  statutoryBasis?: string;
 }
 
 export const RULE_CATALOG: Record<string, RuleDefinition> = {

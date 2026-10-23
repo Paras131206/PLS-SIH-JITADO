@@ -15,6 +15,7 @@ import {
   Building,
 } from 'lucide-react';
 import { StudentRecord } from '../../api/types';
+import { PiiReveal } from '../../components/common/PiiReveal';
 
 export const StudentView: React.FC = () => {
   const [copied, setCopied] = useState(false);
@@ -113,6 +114,24 @@ export const StudentView: React.FC = () => {
               <span className="text-[10px] text-muted-foreground block">
                 Enrolled: {student?.admission_date} ({student?.seat_type})
               </span>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30">
+              <span className="text-muted-foreground block mb-0.5">Encrypted Student Email:</span>
+              <PiiReveal
+                maskedValue="aa***@dtu.ac.in"
+                unmaskedValue="aarav.kumar@dtu.ac.in"
+                fieldType="email"
+                studentId="std-aarav-01"
+              />
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30">
+              <span className="text-muted-foreground block mb-0.5">Encrypted Student Mobile:</span>
+              <PiiReveal
+                maskedValue="+91 98****3210"
+                unmaskedValue="+91 9876543210"
+                fieldType="mobile"
+                studentId="std-aarav-01"
+              />
             </div>
           </div>
         </CardContent>

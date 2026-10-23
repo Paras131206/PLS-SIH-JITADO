@@ -596,4 +596,33 @@ export const handlers = [
       generated_at: new Date().toISOString(),
     });
   }),
+
+  // Audit PII Reveal Action (Section 10)
+  http.post('/v1/audit/reveal', async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, any>;
+    const newEntry: AuditLogEntry = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor_id: currentUser.id,
+      actor_role: currentUser.role,
+      action: 'PII_REVEAL',
+      resource_type: 'STUDENT_PII',
+      resource_id: body.studentId || 'std-2026-dtu-001',
+      details_masked: {
+        fieldType: body.fieldType,
+        purpose: 'Regulatory Statutory Compliance Audit',
+      },
+      prev_hash: mockAuditChain.latest_hash,
+      hash: 'sha256-block-' + Math.random().toString(36).substring(2, 10),
+    };
+
+    mockAuditLogs.unshift(newEntry);
+    mockAuditChain.total_blocks += 1;
+    mockAuditChain.latest_hash = newEntry.hash;
+
+    return HttpResponse.json({
+      success: true,
+      entry: newEntry,
+    });
+  }),
 ];
