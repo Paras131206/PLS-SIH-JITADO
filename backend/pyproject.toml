@@ -15,6 +15,7 @@ dependencies = [
     "redis>=5.0.2",
     "rq>=1.16.0",
     "pyjwt[crypto]>=2.8.0",
+    "python-jose[cryptography]>=3.3.0",
     "passlib[argon2]>=1.7.4",
     "cryptography>=42.0.5",
     "python-multipart>=0.0.9",
