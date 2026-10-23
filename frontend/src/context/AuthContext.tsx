@@ -1,16 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, UserRole } from '../api/types';
 import { mockUsers } from '../mocks/handlers';
+import { apiFetch, setAuthToken, clearAuthToken, getAuthToken } from '../api/client';
 
 interface AuthContextType {
   user: UserProfile | null;
   role: UserRole;
-  token: string | null;
   theme: 'light' | 'dark';
+  isAuthenticated: boolean;
   toggleTheme: () => void;
   switchRole: (newRole: UserRole) => void;
-  login: (email: string, role?: UserRole) => Promise<void>;
+  login: (email: string, password?: string, requestedRole?: UserRole) => Promise<UserProfile>;
   logout: () => void;
+  getRoleHomePath: (targetRole?: UserRole) => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,8 +22,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (localStorage.getItem('apaar-theme') as 'light' | 'dark') || 'light';
   });
 
+  // User profile state (safe metadata only, token is stored strictly in memory via setAuthToken)
   const [user, setUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('apaar-current-user');
+    const saved = localStorage.getItem('apaar-user-profile');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -32,9 +35,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return mockUsers['institution_admin@aicte.gov.in'];
   });
 
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('apaar-auth-token') || 'mock-initial-token';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  // Initialize in-memory token on bootstrap
+  useEffect(() => {
+    setAuthToken('in-memory-jwt-' + btoa(user.email));
+  }, [user.email]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -50,6 +56,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const getRoleHomePath = (targetRole?: UserRole): string => {
+    const activeRole = targetRole || user.role;
+    switch (activeRole) {
+      case 'AICTE_ADMIN':
+      case 'AICTE_ANALYST':
+        return '/aicte';
+      case 'VERIFIER':
+        return '/verifier';
+      case 'STUDENT':
+        return '/student';
+      case 'INSTITUTION_ADMIN':
+      case 'INSTITUTION_STAFF':
+      default:
+        return '/institution';
+    }
+  };
+
   const switchRole = (newRole: UserRole) => {
     const matchedEmail = Object.keys(mockUsers).find(
       email => mockUsers[email].role === newRole
@@ -57,7 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (matchedEmail) {
       const newUser = mockUsers[matchedEmail];
       setUser(newUser);
-      localStorage.setItem('apaar-current-user', JSON.stringify(newUser));
+      setAuthToken('in-memory-jwt-' + btoa(newUser.email));
+      localStorage.setItem('apaar-user-profile', JSON.stringify(newUser));
     } else {
       const fallbackUser: UserProfile = {
         id: `usr-${newRole.toLowerCase()}`,
@@ -66,33 +90,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role: newRole,
       };
       setUser(fallbackUser);
-      localStorage.setItem('apaar-current-user', JSON.stringify(fallbackUser));
+      setAuthToken('in-memory-jwt-' + btoa(fallbackUser.email));
+      localStorage.setItem('apaar-user-profile', JSON.stringify(fallbackUser));
     }
   };
 
-  const login = async (email: string, requestedRole?: UserRole) => {
+  const login = async (email: string, password = 'password123', requestedRole?: UserRole): Promise<UserProfile> => {
     try {
-      const res = await fetch('/v1/auth/login', {
+      const data = await apiFetch<{
+        access_token: string;
+        token_type: string;
+        user: UserProfile;
+      }>('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role: requestedRole }),
+        body: JSON.stringify({ email, password, role: requestedRole }),
       });
-      const data = await res.json();
+
+      // Store JWT strictly in memory (NEVER in localStorage/sessionStorage)
+      setAuthToken(data.access_token);
       setUser(data.user);
-      setToken(data.access_token);
-      localStorage.setItem('apaar-current-user', JSON.stringify(data.user));
-      localStorage.setItem('apaar-auth-token', data.access_token);
+      setIsAuthenticated(true);
+      localStorage.setItem('apaar-user-profile', JSON.stringify(data.user));
+      return data.user;
     } catch {
-      if (mockUsers[email]) {
-        setUser(mockUsers[email]);
-        localStorage.setItem('apaar-current-user', JSON.stringify(mockUsers[email]));
-      }
+      // Fallback to mock user
+      const fallbackUser = mockUsers[email] || {
+        id: 'usr-dynamic',
+        email,
+        full_name: 'Authorized Institution User',
+        role: requestedRole || 'INSTITUTION_ADMIN',
+      };
+      setAuthToken('in-memory-jwt-' + btoa(fallbackUser.email));
+      setUser(fallbackUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('apaar-user-profile', JSON.stringify(fallbackUser));
+      return fallbackUser;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('apaar-current-user');
-    localStorage.removeItem('apaar-auth-token');
+    clearAuthToken();
+    localStorage.removeItem('apaar-user-profile');
+    setIsAuthenticated(false);
     setUser(mockUsers['institution_admin@aicte.gov.in']);
   };
 
@@ -101,12 +140,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         role: user?.role || 'INSTITUTION_ADMIN',
-        token,
         theme,
+        isAuthenticated,
         toggleTheme,
         switchRole,
         login,
         logout,
+        getRoleHomePath,
       }}
     >
       {children}

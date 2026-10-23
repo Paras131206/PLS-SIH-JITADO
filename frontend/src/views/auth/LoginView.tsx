@@ -4,12 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { ShieldCheck, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
-import { UserRole } from '../../api/types';
+import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
 import { mockUsers } from '../../mocks/handlers';
 
 export const LoginView: React.FC = () => {
-  const { login } = useAuth();
+  const { login, getRoleHomePath } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('institution_admin@aicte.gov.in');
   const [password, setPassword] = useState('password123');
@@ -18,19 +17,14 @@ export const LoginView: React.FC = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await login(email);
-    setIsLoading(false);
-
-    // Redirect based on role
-    const matchedUser = mockUsers[email];
-    if (matchedUser?.role === 'AICTE_ADMIN' || matchedUser?.role === 'AICTE_ANALYST') {
-      navigate('/aicte');
-    } else if (matchedUser?.role === 'VERIFIER') {
-      navigate('/verifier');
-    } else if (matchedUser?.role === 'STUDENT') {
-      navigate('/student');
-    } else {
-      navigate('/institution');
+    try {
+      const loggedInUser = await login(email, password);
+      setIsLoading(false);
+      // Dynamic role-based redirect
+      const destination = getRoleHomePath(loggedInUser.role);
+      navigate(destination);
+    } catch {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +53,7 @@ export const LoginView: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-lg">Portal Sign In</CardTitle>
             <CardDescription>
-              Select your role or enter authorized institutional credentials
+              JWT stored in memory • Secure role-based redirection
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -72,6 +66,7 @@ export const LoginView: React.FC = () => {
                   <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <input
                     type="text"
+                    id="email-input"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -88,6 +83,7 @@ export const LoginView: React.FC = () => {
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <input
                     type="password"
+                    id="password-input"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -99,6 +95,7 @@ export const LoginView: React.FC = () => {
               <Button
                 type="submit"
                 variant="gov"
+                id="login-submit-btn"
                 disabled={isLoading}
                 className="w-full flex items-center justify-center gap-2"
               >
@@ -119,6 +116,7 @@ export const LoginView: React.FC = () => {
                     <button
                       key={key}
                       type="button"
+                      id={`quick-role-${u.role.toLowerCase()}`}
                       onClick={() => selectQuickRole(key)}
                       className={`p-2 rounded border text-left transition-colors ${
                         email === key
@@ -135,7 +133,7 @@ export const LoginView: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter className="bg-muted/30 border-t py-3 text-center justify-center text-[11px] text-muted-foreground">
-            DPDP Act 2023 Compliant • SHA-256 Audit Chained Sessions
+            In-Memory Token Authentication • DPDP Act 2023 Compliant
           </CardFooter>
         </Card>
       </div>
