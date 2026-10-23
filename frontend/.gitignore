@@ -3,6 +3,10 @@ node_modules
 .pnp
 .pnp.js
 
+# Allow frontend/src/lib
+!src/lib/
+!src/lib/**
+
 # Production build artifacts
 dist
 dist-ssr
@@ -11,6 +15,12 @@ dist-ssr
 # Environment variables
 .env
 !.env.example
+
+# Test outputs
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 
 # Logs
 npm-debug.log*

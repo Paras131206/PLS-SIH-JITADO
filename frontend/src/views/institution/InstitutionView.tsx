@@ -15,21 +15,20 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { BatchReport, BatchListItem } from '../../api/types';
+import { apiFetch } from '../../api/client';
 
 export const InstitutionView: React.FC = () => {
   const { data: report, isLoading: reportLoading } = useQuery<BatchReport>({
     queryKey: ['batchReport', 'latest'],
     queryFn: async () => {
-      const res = await fetch('/v1/batches/batch-2026-dtu-001/report');
-      return res.json();
+      return apiFetch<BatchReport>('/batches/batch-2026-dtu-001/report');
     },
   });
 
   const { data: batches } = useQuery<BatchListItem[]>({
     queryKey: ['batches'],
     queryFn: async () => {
-      const res = await fetch('/v1/batches');
-      return res.json();
+      return apiFetch<BatchListItem[]>('/batches');
     },
   });
 
