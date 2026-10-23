@@ -21,6 +21,8 @@ from apaar_engine.models import (
     SupernumeraryScheme,
     mask_apaar,
 )
+from apaar_engine.parser import parse_file
+from apaar_engine.validate import compute_batch_metrics, validate_batch
 
 __all__ = [
     "AdmissionType",
@@ -41,5 +43,8 @@ __all__ = [
     "Severity",
     "StudentRecord",
     "SupernumeraryScheme",
+    "compute_batch_metrics",
     "mask_apaar",
+    "parse_file",
+    "validate_batch",
 ]

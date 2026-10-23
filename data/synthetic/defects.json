@@ -1,1 +1,116 @@
-[]
+[
+  {
+    "row": 10,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id has 11 digits"
+  },
+  {
+    "row": 20,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id contains alphanumeric characters"
+  },
+  {
+    "row": 30,
+    "rule_id": "V002",
+    "field": "apaar_id",
+    "description": "apaar_id has 13 digits"
+  },
+  {
+    "row": 40,
+    "rule_id": "V005",
+    "field": "full_name",
+    "description": "Required field full_name is empty"
+  },
+  {
+    "row": 50,
+    "rule_id": "V005",
+    "field": "dob",
+    "description": "Required field dob is empty"
+  },
+  {
+    "row": 60,
+    "rule_id": "V005",
+    "field": "category",
+    "description": "Required field category is empty"
+  },
+  {
+    "row": 70,
+    "rule_id": "V005",
+    "field": "admission_date",
+    "description": "Required field admission_date is empty"
+  },
+  {
+    "row": 80,
+    "rule_id": "V006",
+    "field": "dob",
+    "description": "Invalid date format for dob: 15/08/2005"
+  },
+  {
+    "row": 90,
+    "rule_id": "V006",
+    "field": "admission_date",
+    "description": "Invalid date format for admission_date: 2026-13-40"
+  },
+  {
+    "row": 100,
+    "rule_id": "V006",
+    "field": "gender",
+    "description": "Invalid enum value 'X' for gender"
+  },
+  {
+    "row": 110,
+    "rule_id": "V006",
+    "field": "category",
+    "description": "Invalid enum value 'GENERAL' for category"
+  },
+  {
+    "row": 120,
+    "rule_id": "V006",
+    "field": "course_level",
+    "description": "Invalid enum value 'BACHELORS' for course_level"
+  },
+  {
+    "row": 130,
+    "rule_id": "V006",
+    "field": "nationality",
+    "description": "Invalid nationality 'INDIA' (must be 2-letter ISO code)"
+  },
+  {
+    "row": 140,
+    "rule_id": "V006",
+    "field": "email",
+    "description": "Invalid email format"
+  },
+  {
+    "row": 150,
+    "rule_id": "V006",
+    "field": "mobile",
+    "description": "Invalid mobile format (too short)"
+  },
+  {
+    "row": 160,
+    "rule_id": "V007",
+    "field": "apaar_id",
+    "description": "Duplicate apaar_id 888877776666 at row 160"
+  },
+  {
+    "row": 165,
+    "rule_id": "V007",
+    "field": "apaar_id",
+    "description": "Duplicate apaar_id 888877776666 at row 165"
+  },
+  {
+    "row": 180,
+    "rule_id": "V008",
+    "field": "institution_student_id",
+    "description": "Duplicate student ID 2026-MECH-0045 at row 180"
+  },
+  {
+    "row": 185,
+    "rule_id": "V008",
+    "field": "institution_student_id",
+    "description": "Duplicate student ID 2026-MECH-0045 at row 185"
+  }
+]

@@ -14,6 +14,7 @@ authors = [
 dependencies = [
     "pydantic>=2.5.0",
     "pandas>=2.1.0",
+    "pandera>=0.20.0",
     "pyyaml>=6.0.0",
     "openpyxl>=3.1.0",
     "rapidfuzz>=3.5.0",

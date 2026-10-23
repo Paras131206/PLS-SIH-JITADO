@@ -94,9 +94,14 @@ def test_mock_registry_consistency():
         assert reg_row["gender"] == s["gender"]
 
 
-def test_defects_json_empty():
+def test_defects_json_structure():
     defects_path = Path(__file__).resolve().parents[2] / "data" / "synthetic" / "defects.json"
     assert defects_path.exists()
     with open(defects_path, mode="r", encoding="utf-8") as f:
         defects = json.load(f)
-    assert defects == []
+    assert isinstance(defects, list)
+    for defect in defects:
+        assert "row" in defect
+        assert "rule_id" in defect
+        assert "field" in defect
+        assert "description" in defect
